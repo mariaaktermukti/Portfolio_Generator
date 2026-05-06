@@ -4,7 +4,7 @@ if (!isset($_SESSION['user_id'])) { header('Location: ../auth/login.php'); exit;
 $uid = $_SESSION['user_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fn=trim($_POST['full_name']); $pr=trim($_POST['profession']??''); $bi=trim($_POST['bio']??''); $img=trim($_POST['profile_image']??'');
-    $chk=$pdo->prepare("SELECT COUNT(*) FROM about WHERE user_id=? AND is_deleted=0"); $chk->execute([$uid]);
+    $chk=$pdo->prepare("SELECT COUNT(*) FROM about WHERE user_id=? AND is_deleted=0"); $chk->execute([$uid]); //d m q
     if($chk->fetchColumn()){
         $pdo->prepare("UPDATE about SET full_name=?,profession=?,bio=?,profile_image=? WHERE user_id=? AND is_deleted=0")->execute([$fn,$pr,$bi,$img,$uid]);
     } else {
@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Location: about.php?saved=1'); exit; // PRG: prevent re-submit on refresh
 }
 if (isset($_GET['delete'])) { $pdo->prepare("UPDATE about SET is_deleted=1 WHERE user_id=?")->execute([$uid]); header('Location: about.php'); exit; }
-$msg = isset($_GET['saved']) ? 'saved' : '';
+$msg = isset($_GET['saved']) ? 'saved' : ''; //sd
 $stmt=$pdo->prepare("SELECT * FROM about WHERE user_id=? AND is_deleted=0"); $stmt->execute([$uid]); $about=$stmt->fetch();
 $pageTitle='About'; $activeNav='about'; require_once 'inc/head.php'; require_once 'inc/sidebar.php';
 ?>
