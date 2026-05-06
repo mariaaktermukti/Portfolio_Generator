@@ -1,4 +1,7 @@
-<?php $user = $_SESSION['username'] ?? 'User'; ?>
+<?php 
+$user = $_SESSION['username'] ?? 'User'; 
+$activeNav = $activeNav ?? ''; 
+?>
 <div class="overlay" id="overlay"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-logo">
