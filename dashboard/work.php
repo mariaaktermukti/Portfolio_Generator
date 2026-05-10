@@ -1,70 +1,113 @@
 <?php
-session_start(); require_once '../config/config/db.php';
-if (!isset($_SESSION['user_id'])) { header('Location: ../auth/login.php'); exit; }
-$uid=$_SESSION['user_id'];
-if ($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['company'])&&!isset($_POST['update_id'])){
-    $pdo->prepare("INSERT INTO work_experience (user_id,company,position,start_date,end_date,description) VALUES(?,?,?,?,?,?)")
-        ->execute([$uid,trim($_POST['company']),trim($_POST['position']),$_POST['start_date']?:null,$_POST['end_date']?:null,trim($_POST['description']??'')]);
-    $newId = $pdo->lastInsertId();
-    header("Location: work.php?edit={$newId}&saved=1"); exit;
+session_start();
+require_once '../config/db.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../auth/login.php');
+    exit;
 }
-if ($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['update_id'])){
-    $id=(int)$_POST['update_id'];
-    $pdo->prepare("UPDATE work_experience SET company=?,position=?,start_date=?,end_date=?,description=? WHERE id=? AND user_id=?")
-        ->execute([trim($_POST['company']),trim($_POST['position']),$_POST['start_date']?:null,$_POST['end_date']?:null,trim($_POST['description']??''),$id,$uid]);
-    header("Location: work.php?edit={$id}&saved=1"); exit;
+
+$user_id = $_SESSION['user_id'];
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+        $id = $_POST['id'];
+        $stmt = $pdo->prepare("UPDATE work_experience SET is_deleted = 1 WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $user_id]);
+        $_SESSION['success_msg'] = "Work experience deleted.";
+    } else {
+        $job_title = $_POST['job_title'] ?? '';
+        $company = $_POST['company'] ?? '';
+        $start_date = $_POST['start_date'] ?? null;
+        $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
+        $description = $_POST['description'] ?? '';
+
+        $stmt = $pdo->prepare("INSERT INTO work_experience (user_id, job_title, company, start_date, end_date, description) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $job_title, $company, $start_date, $end_date, $description]);
+        $_SESSION['success_msg'] = "Work experience added.";
+    }
+    header('Location: work.php');
+    exit;
 }
-if (isset($_GET['delete'])){$pdo->prepare("UPDATE work_experience SET is_deleted=1 WHERE id=? AND user_id=?")->execute([$_GET['delete'],$uid]); header('Location: work.php'); exit;}
-$msg=isset($_GET['saved'])?'saved':'';
-$list=$pdo->prepare("SELECT * FROM work_experience WHERE user_id=? AND is_deleted=0 ORDER BY start_date DESC"); $list->execute([$uid]); $works=$list->fetchAll();
-$ei=null; if(isset($_GET['edit'])){$s=$pdo->prepare("SELECT * FROM work_experience WHERE id=? AND user_id=? AND is_deleted=0"); $s->execute([$_GET['edit'],$uid]); $ei=$s->fetch();}
-$pageTitle='Work Experience'; $activeNav='work'; require_once 'inc/head.php'; require_once 'inc/sidebar.php';
+
+if (isset($_SESSION['success_msg'])) {
+    $success = $_SESSION['success_msg'];
+    unset($_SESSION['success_msg']);
+}
+
+$stmt = $pdo->prepare("SELECT * FROM work_experience WHERE user_id = ? AND is_deleted = 0 ORDER BY start_date DESC");
+$stmt->execute([$user_id]);
+$works = $stmt->fetchAll();
 ?>
-<div class="page-title">Work Experience</div>
-<div class="page-sub">Your professional career history.</div>
-<div style="margin-top:1.5rem;" class="card">
-  <div class="card-head">
-    <div class="card-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
-    <div><div class="card-title"><?= $ei?'Edit Record':'Add Job' ?></div><div class="card-sub">Company, role and duration</div></div>
-  </div>
-  <?php if($msg==='saved'): ?><div class="alert alert-success"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Saved successfully! Work record updated.</div><?php endif; ?>
-  <?php if($ei): ?><div style="margin-bottom:1rem;"><a href="work.php" class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New Job</a></div><?php endif; ?>
-  <form method="POST">
-    <?php if($ei): ?><input type="hidden" name="update_id" value="<?= $ei['id'] ?>"><?php endif; ?>
-    <div class="form-grid">
-      <div class="fg"><label>Company</label><input type="text" name="company" placeholder="e.g. Google" value="<?= htmlspecialchars($ei['company']??'') ?>" required></div>
-      <div class="fg"><label>Position</label><input type="text" name="position" placeholder="e.g. Senior Developer" value="<?= htmlspecialchars($ei['position']??'') ?>" required></div>
-      <div class="fg"><label>Start Date</label><input type="date" name="start_date" value="<?= htmlspecialchars($ei['start_date']??'') ?>"></div>
-      <div class="fg"><label>End Date <span style="color:var(--muted);font-weight:400;">(leave blank if current)</span></label><input type="date" name="end_date" value="<?= htmlspecialchars($ei['end_date']??'') ?>"></div>
-      <div class="fg span2"><label>Description</label><textarea name="description" placeholder="Key responsibilities and achievements..."><?= htmlspecialchars($ei['description']??'') ?></textarea></div>
+<?php include 'inc/head.php'; ?>
+<?php include 'inc/sidebar.php'; ?>
+
+<main class="main-content">
+    <div class="glass-panel">
+        <h2>Manage Work Experience</h2>
+        
+        <?php if ($success): ?>
+            <div class="msg-success"><?php echo htmlspecialchars($success); ?></div>
+        <?php endif; ?>
+        
+        <form method="POST">
+            <h3>Add Work Experience</h3>
+            <div class="form-group">
+                <label>Job Title</label>
+                <input type="text" name="job_title" required placeholder="e.g. Senior Software Engineer">
+            </div>
+            
+            <div class="form-group">
+                <label>Company</label>
+                <input type="text" name="company" required placeholder="e.g. Google">
+            </div>
+            
+            <div class="form-group" style="display: flex; gap: 1rem;">
+                <div style="flex: 1;">
+                    <label>Start Date</label>
+                    <input type="date" name="start_date" required>
+                </div>
+                <div style="flex: 1;">
+                    <label>End Date</label>
+                    <input type="date" name="end_date">
+                    <small style="color: var(--text-muted);">Leave empty if currently working here</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="3" placeholder="Describe your responsibilities..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn">Add Work Experience</button>
+        </form>
     </div>
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary"><?= $ei?'Update':'Add Job' ?></button>
-      <?php if($ei): ?><a href="work.php" class="btn btn-secondary">Cancel</a><?php endif; ?>
+
+    <div class="glass-panel">
+        <h3>Your Work History</h3>
+        <?php if (count($works) > 0): ?>
+            <div class="timeline">
+                <?php foreach ($works as $work): ?>
+                    <div class="timeline-item">
+                        <h4 style="margin-bottom: 0.2rem;"><?php echo htmlspecialchars($work['job_title']); ?></h4>
+                        <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-building"></i> <?php echo htmlspecialchars($work['company']); ?> | 
+                            <i class="fas fa-calendar-alt"></i> <?php echo $work['start_date']; ?> to <?php echo $work['end_date'] ?: 'Present'; ?>
+                        </div>
+                        <p style="margin-bottom: 1rem;"><?php echo htmlspecialchars($work['description']); ?></p>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="<?php echo $work['id']; ?>">
+                            <button type="submit" class="btn btn-danger" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;"><i class="fas fa-trash"></i> Delete</button>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p style="color: var(--text-muted);">No work experience records found.</p>
+        <?php endif; ?>
     </div>
-  </form>
-</div>
-<?php if($works): ?>
-<div class="card">
-  <div class="card-head"><div class="card-icon"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg></div><div class="card-title">Work History</div></div>
-  <?php foreach($works as $w): ?>
-  <div style="padding:1rem;border:1px solid var(--border);border-radius:12px;margin-bottom:.75rem;background:rgba(255,255,255,.03);">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
-      <div>
-        <div style="font-weight:600;font-size:.95rem;"><?= htmlspecialchars($w['position']) ?></div>
-        <div style="color:var(--accent);font-size:.85rem;margin-top:.1rem;"><?= htmlspecialchars($w['company']) ?></div>
-        <div style="color:var(--muted);font-size:.78rem;margin-top:.3rem;">
-          <?= htmlspecialchars($w['start_date']??'') ?> — <?= $w['end_date']?htmlspecialchars($w['end_date']):'<span style="color:#6ee7b7;">Present</span>' ?>
-        </div>
-        <?php if($w['description']): ?><div style="font-size:.83rem;color:rgba(255,255,255,.6);margin-top:.5rem;"><?= nl2br(htmlspecialchars($w['description'])) ?></div><?php endif; ?>
-      </div>
-      <div class="td-actions">
-        <a href="work.php?edit=<?= $w['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
-        <a href="work.php?delete=<?= $w['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete?')">Delete</a>
-      </div>
-    </div>
-  </div>
-  <?php endforeach; ?>
-</div>
-<?php endif; ?>
-<?php require_once 'inc/foot.php'; ?>
+</main>
+
+<?php include 'inc/foot.php'; ?>

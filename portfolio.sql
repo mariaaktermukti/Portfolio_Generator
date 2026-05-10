@@ -148,6 +148,23 @@ CREATE TABLE `portfolio_views` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `portfolio_ratings`
+--
+
+CREATE TABLE `portfolio_ratings` (
+  `id` int(11) NOT NULL,
+  `portfolio_user_id` int(11) NOT NULL,
+  `rater_name` varchar(100) NOT NULL,
+  `rater_email` varchar(100) NOT NULL,
+  `rating` int(1) NOT NULL CHECK (`rating` >= 1 AND `rating` <= 5),
+  `comment` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `is_deleted` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `reviews`
 --
 
@@ -299,6 +316,14 @@ ALTER TABLE `portfolio_views`
   ADD KEY `idx_view_user` (`user_id`);
 
 --
+-- Indexes for table `portfolio_ratings`
+--
+ALTER TABLE `portfolio_ratings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_portfolio_user_id` (`portfolio_user_id`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
 -- Indexes for table `reviews`
 --
 ALTER TABLE `reviews`
@@ -374,6 +399,12 @@ ALTER TABLE `portfolio_views`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `portfolio_ratings`
+--
+ALTER TABLE `portfolio_ratings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `reviews`
 --
 ALTER TABLE `reviews`
@@ -442,6 +473,12 @@ ALTER TABLE `logs`
 --
 ALTER TABLE `portfolio_views`
   ADD CONSTRAINT `portfolio_views_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `portfolio_ratings`
+--
+ALTER TABLE `portfolio_ratings`
+  ADD CONSTRAINT `portfolio_ratings_ibfk_1` FOREIGN KEY (`portfolio_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `reviews`

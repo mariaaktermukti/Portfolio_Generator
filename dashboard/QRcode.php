@@ -1,28 +1,33 @@
 <?php
 session_start();
+require_once '../config/db.php';
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../auth/login.php');
     exit;
 }
+
 $username = $_SESSION['username'];
-
-// পোর্টফোলিওর পূর্ণ URL তৈরি (আপনার ডোমেইন/লোকালহোস্ট অনুযায়ী বদলান)
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
-$host = $_SERVER['HTTP_HOST'];
-// বেস URL থেকে public ফোল্ডারে portfolio.php-তে যাওয়ার পাথ
-$portfolioUrl = "$protocol://$host/smart_portfolio/public/portfolio.php?user=" . urlencode($username);
-
-// Google Charts API দিয়ে QR ইমেজ তৈরি
-$qrImageUrl = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=" . urlencode($portfolioUrl) . "&choe=UTF-8";
+$portfolio_url = "http://" . $_SERVER['HTTP_HOST'] . "/Portfolio_generator/public/portfolio.php?user=" . urlencode($username);
+$qr_api_url = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=" . urlencode($portfolio_url) . "&choe=UTF-8";
 ?>
-<!DOCTYPE html>
-<html>
-<head><title>Your Portfolio QR Code</title></head>
-<body>
-    <h2>QR Code for Your Portfolio</h2>
-    <p>Scan this QR code to view your portfolio:</p>
-    <img src="<?= $qrImageUrl ?>" alt="QR Code" style="border:2px solid #000; padding:10px;">
-    <p><strong>Your Portfolio Link:</strong> <a href="<?= htmlspecialchars($portfolioUrl) ?>" target="_blank"><?= htmlspecialchars($portfolioUrl) ?></a></p>
-    <p><a href="index.php">Back to Dashboard</a></p>
-</body>
-</html>
+<?php include 'inc/head.php'; ?>
+<?php include 'inc/sidebar.php'; ?>
+
+<main class="main-content">
+    <div class="glass-panel" style="text-align: center;">
+        <h2>Your Portfolio QR Code</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Scan this QR code to instantly visit your public portfolio. Share it on your resume or business cards!</p>
+        
+        <div style="background: white; padding: 20px; display: inline-block; border-radius: 16px; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <img src="<?php echo htmlspecialchars($qr_api_url); ?>" alt="Portfolio QR Code" style="display: block;">
+        </div>
+        
+        <div style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; word-break: break-all;">
+            <strong>Your Portfolio URL:</strong><br>
+            <a href="<?php echo htmlspecialchars($portfolio_url); ?>" target="_blank" style="font-size: 1.1rem;"><?php echo htmlspecialchars($portfolio_url); ?></a>
+        </div>
+    </div>
+</main>
+
+<?php include 'inc/foot.php'; ?>

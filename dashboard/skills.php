@@ -1,66 +1,93 @@
 <?php
-session_start(); require_once '../config/config/db.php';
-if (!isset($_SESSION['user_id'])) { header('Location: ../auth/login.php'); exit; }
-$uid=$_SESSION['user_id'];
-if ($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['skill_name'])&&!isset($_POST['update_id'])){
-    $pdo->prepare("INSERT INTO skills (user_id,skill_name,proficiency) VALUES(?,?,?)")->execute([$uid,trim($_POST['skill_name']),$_POST['proficiency']]);
-    $newId = $pdo->lastInsertId();
-    header("Location: skills.php?edit={$newId}&saved=1"); exit;
+session_start();
+require_once '../config/db.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../auth/login.php');
+    exit;
 }
-if ($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['update_id'])){
-    $id = (int)$_POST['update_id'];
-    $pdo->prepare("UPDATE skills SET skill_name=?,proficiency=? WHERE id=? AND user_id=?")->execute([trim($_POST['skill_name']),$_POST['proficiency'],$id,$uid]);
-    header("Location: skills.php?edit={$id}&saved=1"); exit;
+
+$user_id = $_SESSION['user_id'];
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+        $id = $_POST['id'];
+        $stmt = $pdo->prepare("UPDATE skills SET is_deleted = 1 WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $user_id]);
+        $_SESSION['success_msg'] = "Skill deleted.";
+    } else {
+        $skill_name = $_POST['skill_name'] ?? '';
+        $proficiency = (int)($_POST['proficiency'] ?? 0);
+
+        $stmt = $pdo->prepare("INSERT INTO skills (user_id, skill_name, proficiency) VALUES (?, ?, ?)");
+        $stmt->execute([$user_id, $skill_name, $proficiency]);
+        $_SESSION['success_msg'] = "Skill added.";
+    }
+    header('Location: skills.php');
+    exit;
 }
-if (isset($_GET['delete'])){$pdo->prepare("UPDATE skills SET is_deleted=1 WHERE id=? AND user_id=?")->execute([$_GET['delete'],$uid]); header('Location: skills.php'); exit;}
-$msg = isset($_GET['saved']) ? 'saved' : '';
-$skl=$pdo->prepare("SELECT * FROM skills WHERE user_id=? AND is_deleted=0 ORDER BY FIELD(proficiency,'Expert','Advanced','Intermediate','Beginner')"); $skl->execute([$uid]); $skills=$skl->fetchAll();
-$ei=null; if(isset($_GET['edit'])){$s=$pdo->prepare("SELECT * FROM skills WHERE id=? AND user_id=? AND is_deleted=0"); $s->execute([$_GET['edit'],$uid]); $ei=$s->fetch();}
-$pageTitle='Skills'; $activeNav='skills'; require_once 'inc/head.php'; require_once 'inc/sidebar.php';
-$lvlMap=['Beginner'=>'badge-b','Intermediate'=>'badge-i','Advanced'=>'badge-a','Expert'=>'badge-e'];
+
+if (isset($_SESSION['success_msg'])) {
+    $success = $_SESSION['success_msg'];
+    unset($_SESSION['success_msg']);
+}
+
+$stmt = $pdo->prepare("SELECT * FROM skills WHERE user_id = ? AND is_deleted = 0 ORDER BY proficiency DESC");
+$stmt->execute([$user_id]);
+$skills = $stmt->fetchAll();
 ?>
-<div class="page-title">Skills</div>
-<div class="page-sub">Showcase your technical and professional skills.</div>
-<div style="margin-top:1.5rem;" class="card">
-  <div class="card-head">
-    <div class="card-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-    <div><div class="card-title"><?= $ei?'Edit Skill':'Add Skill' ?></div><div class="card-sub">Add your expertise</div></div>
-  </div>
-  <?php if($msg==='saved'): ?><div class="alert alert-success"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Saved successfully! Skill updated.</div><?php endif; ?>
-  <?php if($ei): ?><div style="margin-bottom:1rem;"><a href="skills.php" class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New Skill</a></div><?php endif; ?>
-  <form method="POST">
-    <?php if($ei): ?><input type="hidden" name="update_id" value="<?= $ei['id'] ?>"><?php endif; ?>
-    <div class="form-grid">
-      <div class="fg"><label>Skill Name</label><input type="text" name="skill_name" placeholder="e.g. PHP, React, Figma" value="<?= htmlspecialchars($ei['skill_name']??'') ?>" required></div>
-      <div class="fg"><label>Proficiency Level</label>
-        <select name="proficiency">
-          <?php foreach(['Beginner','Intermediate','Advanced','Expert'] as $lvl): ?>
-          <option <?= ($ei['proficiency']??'')===$lvl?'selected':'' ?>><?= $lvl ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
+<?php include 'inc/head.php'; ?>
+<?php include 'inc/sidebar.php'; ?>
+
+<main class="main-content">
+    <div class="glass-panel">
+        <h2>Manage Skills</h2>
+        
+        <?php if ($success): ?>
+            <div class="msg-success"><?php echo htmlspecialchars($success); ?></div>
+        <?php endif; ?>
+        
+        <form method="POST">
+            <h3>Add New Skill</h3>
+            <div class="form-group">
+                <label>Skill Name</label>
+                <input type="text" name="skill_name" required placeholder="e.g. PHP, MySQL, CSS">
+            </div>
+            
+            <div class="form-group">
+                <label>Proficiency (%)</label>
+                <input type="number" name="proficiency" min="1" max="100" required placeholder="80">
+            </div>
+            
+            <button type="submit" class="btn">Add Skill</button>
+        </form>
     </div>
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary"><?= $ei?'Update Skill':'Add Skill' ?></button>
-      <?php if($ei): ?><a href="skills.php" class="btn btn-secondary">Cancel</a><?php endif; ?>
+
+    <div class="glass-panel">
+        <h3>Your Skills</h3>
+        <?php if (count($skills) > 0): ?>
+            <div class="card-grid">
+                <?php foreach ($skills as $skill): ?>
+                    <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1; margin-right: 1rem;">
+                            <strong><?php echo htmlspecialchars($skill['skill_name']); ?></strong>
+                            <div class="skill-bar">
+                                <div class="skill-progress" style="width: <?php echo $skill['proficiency']; ?>%;"></div>
+                            </div>
+                        </div>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="<?php echo $skill['id']; ?>">
+                            <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.6rem; width: auto; font-size: 0.8rem;" title="Delete"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p style="color: var(--text-muted);">No skills found. Add your first one above!</p>
+        <?php endif; ?>
     </div>
-  </form>
-</div>
-<?php if($skills): ?>
-<div class="card">
-  <div class="card-head"><div class="card-icon"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg></div><div class="card-title">Your Skills</div></div>
-  <div style="display:flex;flex-wrap:wrap;gap:.65rem;">
-    <?php foreach($skills as $s): ?>
-    <div style="display:flex;align-items:center;gap:.55rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.55rem .85rem;">
-      <span style="font-size:.88rem;font-weight:500;"><?= htmlspecialchars($s['skill_name']) ?></span>
-      <span class="badge <?= $lvlMap[$s['proficiency']]??'' ?>"><?= $s['proficiency'] ?></span>
-      <div style="display:flex;gap:.3rem;margin-left:.3rem;">
-        <a href="skills.php?edit=<?= $s['id'] ?>" class="btn btn-secondary btn-sm" style="padding:.28rem .55rem;">✏️</a>
-        <a href="skills.php?delete=<?= $s['id'] ?>" class="btn btn-danger btn-sm" style="padding:.28rem .55rem;" onclick="return confirm('Delete?')">🗑</a>
-      </div>
-    </div>
-    <?php endforeach; ?>
-  </div>
-</div>
-<?php endif; ?>
-<?php require_once 'inc/foot.php'; ?>
+</main>
+
+<?php include 'inc/foot.php'; ?>

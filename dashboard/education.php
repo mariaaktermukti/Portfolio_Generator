@@ -1,71 +1,113 @@
 <?php
-session_start(); require_once '../config/config/db.php';
-if (!isset($_SESSION['user_id'])) { header('Location: ../auth/login.php'); exit; }
-$uid=$_SESSION['user_id'];
-if ($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['institution'])&&!isset($_POST['update_id'])){
-    $pdo->prepare("INSERT INTO education (user_id,institution,degree,field_of_study,start_date,end_date,description) VALUES(?,?,?,?,?,?,?)")
-        ->execute([$uid,trim($_POST['institution']),trim($_POST['degree']),trim($_POST['field_of_study']??''),$_POST['start_date']?:null,$_POST['end_date']?:null,trim($_POST['description']??'')]);
-    $newId = $pdo->lastInsertId();
-    header("Location: education.php?edit={$newId}&saved=1"); exit;
+session_start();
+require_once '../config/db.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../auth/login.php');
+    exit;
 }
-if ($_SERVER['REQUEST_METHOD']==='POST'&&isset($_POST['update_id'])){
-    $id = (int)$_POST['update_id'];
-    $pdo->prepare("UPDATE education SET institution=?,degree=?,field_of_study=?,start_date=?,end_date=?,description=? WHERE id=? AND user_id=?")
-        ->execute([trim($_POST['institution']),trim($_POST['degree']),trim($_POST['field_of_study']??''),$_POST['start_date']?:null,$_POST['end_date']?:null,trim($_POST['description']??''),$id,$uid]);
-    header("Location: education.php?edit={$id}&saved=1"); exit;
+
+$user_id = $_SESSION['user_id'];
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+        $id = $_POST['id'];
+        $stmt = $pdo->prepare("UPDATE education SET is_deleted = 1 WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $user_id]);
+        $_SESSION['success_msg'] = "Education entry deleted.";
+    } else {
+        $degree = $_POST['degree'] ?? '';
+        $institution = $_POST['institution'] ?? '';
+        $start_date = $_POST['start_date'] ?? null;
+        $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
+        $description = $_POST['description'] ?? '';
+
+        $stmt = $pdo->prepare("INSERT INTO education (user_id, degree, institution, start_date, end_date, description) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $degree, $institution, $start_date, $end_date, $description]);
+        $_SESSION['success_msg'] = "Education entry added.";
+    }
+    header('Location: education.php');
+    exit;
 }
-if (isset($_GET['delete'])){$pdo->prepare("UPDATE education SET is_deleted=1 WHERE id=? AND user_id=?")->execute([$_GET['delete'],$uid]); header('Location: education.php'); exit;}
-$msg = isset($_GET['saved']) ? 'saved' : '';
-$list=$pdo->prepare("SELECT * FROM education WHERE user_id=? AND is_deleted=0 ORDER BY start_date DESC"); $list->execute([$uid]); $edus=$list->fetchAll();
-$ei=null; if(isset($_GET['edit'])){$s=$pdo->prepare("SELECT * FROM education WHERE id=? AND user_id=? AND is_deleted=0"); $s->execute([$_GET['edit'],$uid]); $ei=$s->fetch();}
-$pageTitle='Education'; $activeNav='education'; require_once 'inc/head.php'; require_once 'inc/sidebar.php';
+
+if (isset($_SESSION['success_msg'])) {
+    $success = $_SESSION['success_msg'];
+    unset($_SESSION['success_msg']);
+}
+
+$stmt = $pdo->prepare("SELECT * FROM education WHERE user_id = ? AND is_deleted = 0 ORDER BY start_date DESC");
+$stmt->execute([$user_id]);
+$educations = $stmt->fetchAll();
 ?>
-<div class="page-title">Education</div>
-<div class="page-sub">Your academic background and qualifications.</div>
-<div style="margin-top:1.5rem;" class="card">
-  <div class="card-head">
-    <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-    <div><div class="card-title"><?= $ei?'Edit Record':'Add Education' ?></div><div class="card-sub">Institution, degree and dates</div></div>
-  </div>
-  <?php if($msg==='saved'): ?><div class="alert alert-success"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Saved successfully! Your education record is now updated.</div><?php endif; ?>
-  <?php if($ei): ?><div style="margin-bottom:1rem;"><a href="education.php" class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add New Education</a></div><?php endif; ?>
-  <form method="POST">
-    <?php if($ei): ?><input type="hidden" name="update_id" value="<?= $ei['id'] ?>"><?php endif; ?>
-    <div class="form-grid">
-      <div class="fg"><label>Institution</label><input type="text" name="institution" placeholder="University / College" value="<?= htmlspecialchars($ei['institution']??'') ?>" required></div>
-      <div class="fg"><label>Degree</label><input type="text" name="degree" placeholder="e.g. Bachelor of Science" value="<?= htmlspecialchars($ei['degree']??'') ?>" required></div>
-      <div class="fg span2"><label>Field of Study</label><input type="text" name="field_of_study" placeholder="e.g. Computer Science" value="<?= htmlspecialchars($ei['field_of_study']??'') ?>"></div>
-      <div class="fg"><label>Start Date</label><input type="date" name="start_date" value="<?= htmlspecialchars($ei['start_date']??'') ?>"></div>
-      <div class="fg"><label>End Date</label><input type="date" name="end_date" value="<?= htmlspecialchars($ei['end_date']??'') ?>"></div>
-      <div class="fg span2"><label>Description</label><textarea name="description" placeholder="Brief description..."><?= htmlspecialchars($ei['description']??'') ?></textarea></div>
+<?php include 'inc/head.php'; ?>
+<?php include 'inc/sidebar.php'; ?>
+
+<main class="main-content">
+    <div class="glass-panel">
+        <h2>Manage Education</h2>
+        
+        <?php if ($success): ?>
+            <div class="msg-success"><?php echo htmlspecialchars($success); ?></div>
+        <?php endif; ?>
+        
+        <form method="POST">
+            <h3>Add New Education</h3>
+            <div class="form-group">
+                <label>Degree / Certificate</label>
+                <input type="text" name="degree" required placeholder="e.g. BSc in Computer Science">
+            </div>
+            
+            <div class="form-group">
+                <label>Institution</label>
+                <input type="text" name="institution" required placeholder="e.g. MIT">
+            </div>
+            
+            <div class="form-group" style="display: flex; gap: 1rem;">
+                <div style="flex: 1;">
+                    <label>Start Date</label>
+                    <input type="date" name="start_date" required>
+                </div>
+                <div style="flex: 1;">
+                    <label>End Date</label>
+                    <input type="date" name="end_date">
+                    <small style="color: var(--text-muted);">Leave empty if currently studying</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="3" placeholder="Briefly describe what you studied..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn">Add Education</button>
+        </form>
     </div>
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary"><?= $ei?'Update':'Add Education' ?></button>
-      <?php if($ei): ?><a href="education.php" class="btn btn-secondary">Cancel</a><?php endif; ?>
+
+    <div class="glass-panel">
+        <h3>Your Education History</h3>
+        <?php if (count($educations) > 0): ?>
+            <div class="timeline">
+                <?php foreach ($educations as $edu): ?>
+                    <div class="timeline-item">
+                        <h4 style="margin-bottom: 0.2rem;"><?php echo htmlspecialchars($edu['degree']); ?></h4>
+                        <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-university"></i> <?php echo htmlspecialchars($edu['institution']); ?> | 
+                            <i class="fas fa-calendar-alt"></i> <?php echo $edu['start_date']; ?> to <?php echo $edu['end_date'] ?: 'Present'; ?>
+                        </div>
+                        <p style="margin-bottom: 1rem;"><?php echo htmlspecialchars($edu['description']); ?></p>
+                        <form method="POST">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="<?php echo $edu['id']; ?>">
+                            <button type="submit" class="btn btn-danger" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;"><i class="fas fa-trash"></i> Delete</button>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p style="color: var(--text-muted);">No education records found. Add your first one above!</p>
+        <?php endif; ?>
     </div>
-  </form>
-</div>
-<?php if($edus): ?>
-<div class="card">
-  <div class="card-head"><div class="card-icon"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div><div class="card-title">Education Records</div></div>
-  <div class="tbl-wrap"><table>
-    <thead><tr><th>Institution</th><th>Degree</th><th>Field</th><th>Start</th><th>End</th><th>Actions</th></tr></thead>
-    <tbody>
-    <?php foreach($edus as $e): ?>
-    <tr>
-      <td><strong><?= htmlspecialchars($e['institution']) ?></strong></td>
-      <td><?= htmlspecialchars($e['degree']) ?></td>
-      <td><?= htmlspecialchars($e['field_of_study']) ?></td>
-      <td><?= htmlspecialchars($e['start_date']??'-') ?></td>
-      <td><?= htmlspecialchars($e['end_date']??'Present') ?></td>
-      <td><div class="td-actions">
-        <a href="education.php?edit=<?= $e['id'] ?>" class="btn btn-secondary btn-sm">Edit</a>
-        <a href="education.php?delete=<?= $e['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete?')">Delete</a>
-      </div></td>
-    </tr>
-    <?php endforeach; ?>
-    </tbody>
-  </table></div>
-</div>
-<?php endif; ?>
-<?php require_once 'inc/foot.php'; ?>
+</main>
+
+<?php include 'inc/foot.php'; ?>

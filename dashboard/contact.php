@@ -1,43 +1,83 @@
 <?php
-session_start(); require_once '../config/config/db.php';
-if (!isset($_SESSION['user_id'])) { header('Location: ../auth/login.php'); exit; }
-$uid=$_SESSION['user_id'];
-if ($_SERVER['REQUEST_METHOD']==='POST') {
-    $em=trim($_POST['email']??''); $ph=trim($_POST['phone']??''); $ad=trim($_POST['address']??''); $we=trim($_POST['website']??''); $li=trim($_POST['linkedin']??''); $gh=trim($_POST['github']??'');
-    $chk=$pdo->prepare("SELECT COUNT(*) FROM contact WHERE user_id=? AND is_deleted=0"); $chk->execute([$uid]);
-    if($chk->fetchColumn()){
-        $pdo->prepare("UPDATE contact SET email=?,phone=?,address=?,website=?,linkedin=?,github=? WHERE user_id=? AND is_deleted=0")->execute([$em,$ph,$ad,$we,$li,$gh,$uid]);
-    } else {
-        $pdo->prepare("INSERT INTO contact (user_id,email,phone,address,website,linkedin,github) VALUES(?,?,?,?,?,?,?)")->execute([$uid,$em,$ph,$ad,$we,$li,$gh]);
-    }
-    header('Location: contact.php?saved=1'); exit;
+session_start();
+require_once '../config/db.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../auth/login.php');
+    exit;
 }
-if (isset($_GET['delete'])) { $pdo->prepare("UPDATE contact SET is_deleted=1 WHERE user_id=?")->execute([$uid]); header('Location: contact.php'); exit; }
-$msg = isset($_GET['saved']) ? 'saved' : '';
-$stmt=$pdo->prepare("SELECT * FROM contact WHERE user_id=? AND is_deleted=0"); $stmt->execute([$uid]); $c=$stmt->fetch();
-$pageTitle='Contact'; $activeNav='contact'; require_once 'inc/head.php'; require_once 'inc/sidebar.php';
+
+$user_id = $_SESSION['user_id'];
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $phone = $_POST['phone'] ?? '';
+    $address = $_POST['address'] ?? '';
+    $linkedin = $_POST['linkedin'] ?? '';
+    $github = $_POST['github'] ?? '';
+
+    $stmt = $pdo->prepare("SELECT id FROM contact WHERE user_id = ? AND is_deleted = 0");
+    $stmt->execute([$user_id]);
+    $exists = $stmt->fetch();
+
+    if ($exists) {
+        $stmt = $pdo->prepare("UPDATE contact SET phone = ?, address = ?, linkedin = ?, github = ? WHERE user_id = ? AND is_deleted = 0");
+        $stmt->execute([$phone, $address, $linkedin, $github, $user_id]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO contact (user_id, phone, address, linkedin, github) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $phone, $address, $linkedin, $github]);
+    }
+    
+    $_SESSION['success_msg'] = "Contact information updated successfully!";
+    header('Location: contact.php');
+    exit;
+}
+
+if (isset($_SESSION['success_msg'])) {
+    $success = $_SESSION['success_msg'];
+    unset($_SESSION['success_msg']);
+}
+
+$stmt = $pdo->prepare("SELECT * FROM contact WHERE user_id = ? AND is_deleted = 0");
+$stmt->execute([$user_id]);
+$contact = $stmt->fetch() ?: ['phone' => '', 'address' => '', 'linkedin' => '', 'github' => ''];
+
 ?>
-<div class="page-title">Contact Information</div>
-<div class="page-sub">How people can reach you.</div>
-<div style="margin-top:1.5rem;" class="card">
-  <div class="card-head">
-    <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-    <div><div class="card-title">Contact Details</div><div class="card-sub">Email, social links, and more</div></div>
-  </div>
-  <?php if($msg==='saved'): ?><div class="alert alert-success"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Saved!</div><?php endif; ?>
-  <form method="POST">
-    <div class="form-grid">
-      <div class="fg"><label>Email</label><input type="email" name="email" placeholder="you@email.com" value="<?= htmlspecialchars($c['email']??'') ?>"></div>
-      <div class="fg"><label>Phone</label><input type="tel" name="phone" placeholder="+1 234 567 8900" value="<?= htmlspecialchars($c['phone']??'') ?>"></div>
-      <div class="fg span2"><label>Address</label><input type="text" name="address" placeholder="City, Country" value="<?= htmlspecialchars($c['address']??'') ?>"></div>
-      <div class="fg"><label>Website</label><input type="url" name="website" placeholder="https://yoursite.com" value="<?= htmlspecialchars($c['website']??'') ?>"></div>
-      <div class="fg"><label>LinkedIn URL</label><input type="url" name="linkedin" placeholder="https://linkedin.com/in/..." value="<?= htmlspecialchars($c['linkedin']??'') ?>"></div>
-      <div class="fg span2"><label>GitHub URL</label><input type="url" name="github" placeholder="https://github.com/..." value="<?= htmlspecialchars($c['github']??'') ?>"></div>
+<?php include 'inc/head.php'; ?>
+<?php include 'inc/sidebar.php'; ?>
+
+<main class="main-content">
+    <div class="glass-panel">
+        <h2>Manage Contact Section</h2>
+        
+        <?php if ($success): ?>
+            <div class="msg-success"><?php echo htmlspecialchars($success); ?></div>
+        <?php endif; ?>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" name="phone" value="<?php echo htmlspecialchars($contact['phone']); ?>" placeholder="+1 234 567 890">
+            </div>
+            
+            <div class="form-group">
+                <label>Address</label>
+                <textarea name="address" rows="3" placeholder="City, Country"><?php echo htmlspecialchars($contact['address']); ?></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>LinkedIn URL</label>
+                <input type="url" name="linkedin" value="<?php echo htmlspecialchars($contact['linkedin']); ?>" placeholder="https://linkedin.com/in/username">
+            </div>
+            
+            <div class="form-group">
+                <label>GitHub URL</label>
+                <input type="url" name="github" value="<?php echo htmlspecialchars($contact['github']); ?>" placeholder="https://github.com/username">
+            </div>
+            
+            <button type="submit" class="btn">Save Changes</button>
+        </form>
     </div>
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save</button>
-      <?php if($c): ?><a href="contact.php?delete=1" class="btn btn-danger" onclick="return confirm('Delete contact info?')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete</a><?php endif; ?>
-    </div>
-  </form>
-</div>
-<?php require_once 'inc/foot.php'; ?>
+</main>
+
+<?php include 'inc/foot.php'; ?>
