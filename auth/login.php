@@ -17,9 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($user && password_verify($password, $user['password_hash'])) {
             if ($user['account_status'] === 'pending') {
-                $error = "Your account is pending admin approval.";
+                $error = "Your account is pending admin approval at the moment. Please check back later.";
             } elseif ($user['account_status'] === 'rejected') {
-                $error = "Your account has been rejected.";
+                $error = "Sorry, your account registration has been rejected.";
+            } elseif ($user['account_status'] === 'paused') {
+                $error = "Your account is currently paused/inactive. Please contact the administrator.";
             } else {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];

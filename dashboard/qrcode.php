@@ -25,9 +25,42 @@ $qr_api_url = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=" . url
         
         <div style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; word-break: break-all;">
             <strong>Your Portfolio URL:</strong><br>
-            <a href="<?php echo htmlspecialchars($portfolio_url); ?>" target="_blank" style="font-size: 1.1rem;"><?php echo htmlspecialchars($portfolio_url); ?></a>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 0.75rem; flex-wrap: wrap;">
+                <a href="<?php echo htmlspecialchars($portfolio_url); ?>" target="_blank" style="font-size: 1.1rem;"><?php echo htmlspecialchars($portfolio_url); ?></a>
+                <button type="button" class="btn" id="copyUrlBtn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="copyToClipboard('<?php echo htmlspecialchars($portfolio_url); ?>', this)">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <div id="copyTooltip" style="margin-top: 0.5rem; color: var(--success); font-size: 0.9rem; display: none;">
+                <i class="fas fa-check-circle"></i> URL copied to clipboard!
+            </div>
         </div>
     </div>
 </main>
 
 <?php include 'inc/foot.php'; ?>
+
+<script>
+function copyToClipboard(text, button) {
+    // Copy to clipboard
+    navigator.clipboard.writeText(text).then(function() {
+        // Show tooltip
+        const tooltip = document.getElementById('copyTooltip');
+        tooltip.style.display = 'block';
+        
+        // Change button appearance
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.style.background = 'var(--success)';
+        
+        // Revert after 3 seconds
+        setTimeout(function() {
+            button.innerHTML = originalHTML;
+            button.style.background = 'var(--accent)';
+            tooltip.style.display = 'none';
+        }, 3000);
+    }).catch(function(err) {
+        alert('Failed to copy URL');
+    });
+}
+</script>

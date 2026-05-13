@@ -24,8 +24,8 @@ if (!isset($_SESSION['user_id']) || !$_SESSION['is_admin']) {
         <div class="card-grid">
             <a href="approve_users.php" class="card" style="text-align: center; text-decoration: none;">
                 <i class="fas fa-users-cog" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
-                <h3>Approve Users</h3>
-                <p style="color: var(--text-muted);">Manage pending registrations.</p>
+                <h3>Manage Users</h3>
+                <p style="color: var(--text-muted);">View, approve, reject or suspend users.</p>
             </a>
             <a href="../analytics/analytics.php" class="card" style="text-align: center; text-decoration: none;">
                 <i class="fas fa-chart-line" style="font-size: 3rem; color: var(--success); margin-bottom: 1rem;"></i>

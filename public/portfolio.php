@@ -10,7 +10,7 @@ if (!$username) {
 // Fetch user, about, contact via JOIN
 $stmt = $pdo->prepare("
     SELECT u.id as user_id, u.username, u.email, 
-           a.bio, a.title, a.profile_image, 
+           a.bio, a.title, a.profile_image, a.about_image, 
            c.phone, c.address, c.linkedin, c.github
     FROM users u
     LEFT JOIN about a ON u.id = a.user_id AND a.is_deleted = 0
@@ -73,63 +73,200 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .portfolio-container {
-            max-width: 1000px;
+            max-width: 1280px;
+            width: 100%;
             margin: 0 auto;
-            padding: 2rem;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+           
+            box-sizing: border-box;
         }
+
+        @media (max-width: 1024px) {
+            .portfolio-container {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .portfolio-container {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .portfolio-container {
+                padding: 0.75rem;
+            }
+        }
+
         .hero-section {
-            text-align: center;
-            padding: 4rem 0;
-        }
-        .profile-img {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--accent);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
-            margin-bottom: 1.5rem;
-        }
-        .social-links a {
-            font-size: 1.5rem;
-            margin: 0 0.5rem;
-            color: var(--text-muted);
-            transition: color 0.3s;
-        }
-        .social-links a:hover {
-            color: var(--accent);
+            text-align: left;
+            padding: 4rem 2rem;
         }
     </style>
 </head>
 <body>
     <div class="portfolio-container">
         <!-- Hero Section -->
-        <header class="hero-section glass-panel">
-            <?php if ($profile['profile_image']): ?>
-                <img src="<?php echo htmlspecialchars($profile['profile_image']); ?>" alt="Profile" class="profile-img">
-            <?php else: ?>
-                <div class="profile-img" style="display:inline-flex; align-items:center; justify-content:center; background:var(--bg-secondary); font-size:4rem; color:var(--text-muted);">
-                    <i class="fas fa-user"></i>
+        <header class="hero-section glass-panel" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; padding: 3rem 2rem; border-radius: 16px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));">
+            
+            <!-- Left Content -->
+            <div style="display: flex; flex-direction: column; justify-content: center;">
+                <div style="margin-bottom: 1.5rem;">
+                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 0.5rem;">Welcome to my portfolio</p>
+                    <h1 style="font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 0.5rem; color: #fff;">
+                        Hi, I am <span style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"><?php echo htmlspecialchars($profile['username']); ?></span>
+                    </h1>
+                    <h2 style="font-size: clamp(1.2rem, 3vw, 2rem); color: var(--accent); font-weight: 500; margin: 0;"><?php echo htmlspecialchars($profile['title'] ?? 'Portfolio'); ?></h2>
                 </div>
-            <?php endif; ?>
-            
-            <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"><?php echo htmlspecialchars($profile['username']); ?></h1>
-            <h2 style="color: var(--accent); font-weight: 400;"><?php echo htmlspecialchars($profile['title'] ?? 'Portfolio'); ?></h2>
-            
-            <div style="margin: 1.5rem 0;">
-                <span class="badge badge-approved" style="font-size: 1rem;"><i class="fas fa-star"></i> <?php echo $avg_rating; ?> / 5</span>
+
+                <!-- CTA Buttons & Contact -->
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <a href="../export/export_pdf.php?user=<?php echo urlencode($username); ?>" class="btn" style="display: inline-flex; width: fit-content !important; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; background: var(--accent); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; transition: all 0.3s; border: 2px solid var(--accent); white-space: nowrap; font-size: 0.95rem;">
+                        <i class="fas fa-download"></i> Download Resume
+                    </a>
+                </div>
+
+                <!-- Social Links -->
+                <div class="social-links" style="display: flex; gap: 1.2rem; margin-bottom: 1.5rem;">
+                    <?php if ($profile['email']): ?>
+                        <a href="mailto:<?php echo htmlspecialchars($profile['email']); ?>" style="font-size: 1.3rem; color: var(--text-muted); transition: color 0.3s, transform 0.3s; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(59, 130, 246, 0.1); border-radius: 50%; border: 1px solid var(--border);" onmouseover="this.style.color='var(--accent)'; this.style.background='rgba(59, 130, 246, 0.2)'; this.style.transform='scale(1.1)';" onmouseout="this.style.color='var(--text-muted)'; this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='scale(1)';">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($profile['linkedin']): ?>
+                        <a href="<?php echo htmlspecialchars($profile['linkedin']); ?>" target="_blank" style="font-size: 1.3rem; color: var(--text-muted); transition: color 0.3s, transform 0.3s; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(59, 130, 246, 0.1); border-radius: 50%; border: 1px solid var(--border);" onmouseover="this.style.color='var(--accent)'; this.style.background='rgba(59, 130, 246, 0.2)'; this.style.transform='scale(1.1)';" onmouseout="this.style.color='var(--text-muted)'; this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='scale(1)';">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($profile['github']): ?>
+                        <a href="<?php echo htmlspecialchars($profile['github']); ?>" target="_blank" style="font-size: 1.3rem; color: var(--text-muted); transition: color 0.3s, transform 0.3s; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(59, 130, 246, 0.1); border-radius: 50%; border: 1px solid var(--border);" onmouseover="this.style.color='var(--accent)'; this.style.background='rgba(59, 130, 246, 0.2)'; this.style.transform='scale(1.1)';" onmouseout="this.style.color='var(--text-muted)'; this.style.background='rgba(59, 130, 246, 0.1)'; this.style.transform='scale(1)';">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Location & Rating -->
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <?php if ($profile['address']): ?>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; color: var(--text-muted);">
+                            <i class="fas fa-map-marker-alt" style="color: var(--accent);"></i>
+                            <span><?php echo htmlspecialchars($profile['address']); ?></span>
+                        </div>
+                    <?php endif; ?>
+                    <span style="font-size: 1rem; color: var(--text-muted);">•</span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: #fbbf24;"><i class="fas fa-star"></i></span>
+                        <span style="color: var(--text-muted);"><?php echo $avg_rating; ?>/5 <span style="color: #888; font-size: 0.9rem;">rating</span></span>
+                    </div>
+                </div>
             </div>
 
-            <div class="social-links" style="margin-top: 1.5rem;">
-                <?php if ($profile['email']): ?><a href="mailto:<?php echo htmlspecialchars($profile['email']); ?>"><i class="fas fa-envelope"></i></a><?php endif; ?>
-                <?php if ($profile['linkedin']): ?><a href="<?php echo htmlspecialchars($profile['linkedin']); ?>" target="_blank"><i class="fab fa-linkedin"></i></a><?php endif; ?>
-                <?php if ($profile['github']): ?><a href="<?php echo htmlspecialchars($profile['github']); ?>" target="_blank"><i class="fab fa-github"></i></a><?php endif; ?>
+            <!-- Right Content - Profile Image -->
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <?php if ($profile['profile_image']): ?>
+                    <div style="position: relative; width: 100%; max-width: 350px;">
+                        <!-- Rotating light glow layer 1 -->
+                        <div style="position: absolute; inset: -15px; background: conic-gradient(from 0deg, #3b82f6, #8b5cf6, #3b82f6); border-radius: 50%; opacity: 0.4; animation: rotateBg 6s linear infinite;"></div>
+                        <!-- Expanding pulse layer -->
+                        <div style="position: absolute; inset: -10px; background: radial-gradient(circle, rgba(59, 130, 246, 0.6), transparent); border-radius: 50%; opacity: 0.4; animation: expandPulse 4s ease-in-out infinite;"></div>
+                        <!-- Inner rotating light -->
+                        <div style="position: absolute; inset: -5px; background: linear-gradient(135deg, var(--accent), #8b5cf6); border-radius: 50%; opacity: 0.3; animation: rotateBg 8s linear infinite;"></div>
+                        <img src="<?php echo htmlspecialchars($profile['profile_image']); ?>" alt="Profile" style="width: 100%; max-width: 320px; aspect-ratio: 1; border-radius: 50%; object-fit: cover; border: 6px solid var(--accent); box-shadow: 0 0 50px rgba(59, 130, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.3), inset 0 0 30px rgba(59, 130, 246, 0.2); position: relative; z-index: 1;">
+                    </div>
+                <?php else: ?>
+                    <div style="position: relative; width: 100%; max-width: 350px;">
+                        <!-- Rotating light glow layer 1 -->
+                        <div style="position: absolute; inset: -15px; background: conic-gradient(from 0deg, #3b82f6, #8b5cf6, #3b82f6); border-radius: 50%; opacity: 0.4; animation: rotateBg 6s linear infinite;"></div>
+                        <!-- Expanding pulse layer -->
+                        <div style="position: absolute; inset: -10px; background: radial-gradient(circle, rgba(59, 130, 246, 0.6), transparent); border-radius: 50%; opacity: 0.4; animation: expandPulse 4s ease-in-out infinite;"></div>
+                        <!-- Inner rotating light -->
+                        <div style="position: absolute; inset: -5px; background: linear-gradient(135deg, var(--accent), #8b5cf6); border-radius: 50%; opacity: 0.3; animation: rotateBg 8s linear infinite;"></div>
+                        <div style="width: 100%; max-width: 320px; aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-secondary); font-size: 5rem; color: var(--text-muted); border: 6px solid var(--accent); box-shadow: 0 0 50px rgba(59, 130, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.3), inset 0 0 30px rgba(59, 130, 246, 0.2); position: relative; z-index: 1;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <style>
+                @keyframes rotateBg {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+
+                @keyframes expandPulse {
+                    0%, 100% { transform: scale(1); opacity: 0.2; }
+                    50% { transform: scale(1.15); opacity: 0.5; }
+                }
+
+                @keyframes floatImage {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-8px); }
+                }
+
+                @media (max-width: 768px) {
+                    .hero-section, .about-section {
+                        grid-template-columns: 1fr !important;
+                        gap: 2rem !important;
+                        padding: 2rem 1.5rem !important;
+                    }
+
+                    .hero-section h1 {
+                        font-size: 2rem !important;
+                    }
+
+                    .hero-section h2 {
+                        font-size: 1.3rem !important;
+                    }
+                }
+
+                @media (max-width: 480px) {
+                    .hero-section {
+                        padding: 1.5rem 1rem !important;
+                        gap: 1.5rem !important;
+                    }
+
+                    .hero-section h1 {
+                        font-size: 1.7rem !important;
+                    }
+
+                    .hero-section h2 {
+                        font-size: 1.1rem !important;
+                    }
+                }
+            </style>
+        </header>
+
+        <!-- About Me Section -->
+        <section class="glass-panel about-section" style="animation-delay: 0.05s; display: grid; grid-template-columns: 1fr 1.5fr; gap: 3rem; align-items: center; margin-top: 2rem;">
+            <!-- Left Content - Animated Image -->
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <?php 
+                $display_image = !empty($profile['about_image']) ? $profile['about_image'] : $profile['profile_image'];
+                if ($display_image): 
+                ?>
+                    <div style="position: relative; width: 100%; max-width: 280px; animation: floatImage 4s ease-in-out infinite;">
+                        <img src="<?php echo htmlspecialchars($display_image); ?>" alt="About Me" style="width: 100%; border-radius: 20px; object-fit: cover;">
+                    </div>
+                <?php else: ?>
+                    <div style="position: relative; width: 100%; max-width: 280px; aspect-ratio: 1; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 5rem; color: var(--text-muted); animation: floatImage 4s ease-in-out infinite;">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                <?php endif; ?>
             </div>
             
-            <p style="max-width: 600px; margin: 2rem auto 0; font-size: 1.1rem; color: var(--text-muted); line-height: 1.8;">
-                <?php echo nl2br(htmlspecialchars($profile['bio'] ?? '')); ?>
-            </p>
-        </header>
+            <!-- Right Content - Bio -->
+            <div>
+                <h2 style="color: var(--accent); margin-bottom: 1.5rem; font-size: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-user"></i> About Me
+                </h2>
+                <div style="font-size: 1.1rem; color: var(--text-muted); line-height: 1.8;">
+                    <?php echo nl2br(htmlspecialchars($profile['bio'] ?? '')); ?>
+                </div>
+            </div>
+        </section>
 
         <!-- Skills -->
         <?php if ($skills): ?>
@@ -278,9 +415,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
         </section>
         <?php endif; ?>
 
-        <div style="text-align: center; margin-top: 3rem; margin-bottom: 2rem;">
-            <a href="../export/export_pdf.php?user=<?php echo urlencode($username); ?>" class="btn" style="display: inline-block; width: auto;"><i class="fas fa-file-pdf"></i> Download Resume PDF</a>
-        </div>
+        
     </div>
 </body>
 </html>
