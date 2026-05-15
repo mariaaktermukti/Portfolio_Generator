@@ -9,6 +9,8 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $success = '';
+$edit_data = null;
+$edit_id = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'delete') {
@@ -16,6 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE skills SET is_deleted = 1 WHERE id = ? AND user_id = ?");
         $stmt->execute([$id, $user_id]);
         $_SESSION['success_msg'] = "Skill deleted.";
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'edit') {
+        $edit_id = $_POST['id'];
+        $skill_name = $_POST['skill_name'] ?? '';
+        $proficiency = (int)($_POST['proficiency'] ?? 0);
+
+        $stmt = $pdo->prepare("UPDATE skills SET skill_name = ?, proficiency = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$skill_name, $proficiency, $edit_id, $user_id]);
+        $_SESSION['success_msg'] = "Skill updated.";
     } else {
         $skill_name = $_POST['skill_name'] ?? '';
         $proficiency = (int)($_POST['proficiency'] ?? 0);
@@ -26,6 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     header('Location: skills.php');
     exit;
+}
+
+// Check if editing
+if (isset($_GET['edit'])) {
+    $edit_id = $_GET['edit'];
+    $stmt = $pdo->prepare("SELECT * FROM skills WHERE id = ? AND user_id = ? AND is_deleted = 0");
+    $stmt->execute([$edit_id, $user_id]);
+    $edit_data = $stmt->fetch();
 }
 
 if (isset($_SESSION['success_msg'])) {
@@ -49,18 +67,27 @@ $skills = $stmt->fetchAll();
         <?php endif; ?>
         
         <form method="POST">
-            <h3>Add New Skill</h3>
+            <h3><?php echo $edit_data ? 'Edit Skill' : 'Add New Skill'; ?></h3>
+            <?php if ($edit_data): ?>
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="id" value="<?php echo $edit_data['id']; ?>">
+            <?php endif; ?>
             <div class="form-group">
                 <label>Skill Name</label>
-                <input type="text" name="skill_name" required placeholder="e.g. PHP, MySQL, CSS">
+                <input type="text" name="skill_name" required placeholder="e.g. PHP, MySQL, CSS" value="<?php echo htmlspecialchars($edit_data['skill_name'] ?? ''); ?>">
             </div>
             
             <div class="form-group">
                 <label>Proficiency (%)</label>
-                <input type="number" name="proficiency" min="1" max="100" required placeholder="80">
+                <input type="number" name="proficiency" min="1" max="100" required placeholder="80" value="<?php echo htmlspecialchars($edit_data['proficiency'] ?? ''); ?>">
             </div>
             
-            <button type="submit" class="btn">Add Skill</button>
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn"><?php echo $edit_data ? 'Update Skill' : 'Add Skill'; ?></button>
+                <?php if ($edit_data): ?>
+                    <a href="skills.php" class="btn" style="background: rgba(255,255,255,0.1); text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Cancel</a>
+                <?php endif; ?>
+            </div>
         </form>
     </div>
 
@@ -72,15 +99,21 @@ $skills = $stmt->fetchAll();
                     <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="flex: 1; margin-right: 1rem;">
                             <strong><?php echo htmlspecialchars($skill['skill_name']); ?></strong>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: <?php echo $skill['proficiency']; ?>%;"></div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div class="skill-bar" style="flex: 1;">
+                                    <div class="skill-progress" style="width: <?php echo $skill['proficiency']; ?>%;"></div>
+                                </div>
+                                <span style="color: var(--text-muted); font-size: 0.9rem; min-width: 45px;"><?php echo $skill['proficiency']; ?>%</span>
                             </div>
                         </div>
-                        <form method="POST">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<?php echo $skill['id']; ?>">
-                            <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.6rem; width: auto; font-size: 0.8rem;" title="Delete"><i class="fas fa-trash"></i></button>
-                        </form>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="skills.php?edit=<?php echo $skill['id']; ?>" class="btn" style="padding: 0.3rem 0.6rem; width: auto; font-size: 0.8rem; background: rgba(100,200,255,0.3); text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;" title="Edit"><i class="fas fa-edit"></i></a>
+                            <form method="POST" style="display: inline;">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="<?php echo $skill['id']; ?>">
+                                <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.6rem; width: auto; font-size: 0.8rem;" title="Delete"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>

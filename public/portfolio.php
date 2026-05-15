@@ -82,9 +82,74 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             box-sizing: border-box;
         }
 
+        /* Navigation Header Styles */
+        .portfolio-nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .portfolio-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 0.5rem;
+            margin: 0;
+            padding: 0;
+            flex-wrap: wrap;
+            max-width: 1280px;
+            margin: 0 auto;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .portfolio-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            border: 1px solid transparent;
+        }
+
+        .portfolio-nav a:hover {
+            color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .portfolio-nav a.active {
+            color: #fff;
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         @media (max-width: 1024px) {
             .portfolio-container {
                 padding: 1.5rem;
+            }
+            
+            .portfolio-nav {
+                padding: 0.75rem 1rem;
+            }
+            
+            .portfolio-nav a {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
             }
         }
 
@@ -92,24 +157,51 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             .portfolio-container {
                 padding: 1rem;
             }
+
+            .portfolio-nav {
+                padding: 0.5rem 1rem;
+                overflow-x: auto;
+            }
+
+            .portfolio-nav ul {
+                gap: 0.25rem;
+            }
+
+            .portfolio-nav a {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+                flex-shrink: 0;
+            }
         }
 
         @media (max-width: 480px) {
             .portfolio-container {
                 padding: 0.75rem;
             }
-        }
 
-        .hero-section {
-            text-align: left;
-            padding: 4rem 2rem;
+            .portfolio-nav {
+                padding: 0.5rem 0.75rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="portfolio-container">
+    <!-- Navigation Header -->
+    <nav class="portfolio-nav">
+        <ul>
+            <li><a href="#hero" onclick="scrollToSection('hero')" class="active"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="#about" onclick="scrollToSection('about')"><i class="fas fa-user"></i> About</a></li>
+            <?php if ($skills): ?><li><a href="#skills" onclick="scrollToSection('skills')"><i class="fas fa-star"></i> Skills</a></li><?php endif; ?>
+            <?php if ($work): ?><li><a href="#work" onclick="scrollToSection('work')"><i class="fas fa-briefcase"></i> Work</a></li><?php endif; ?>
+            <?php if ($education): ?><li><a href="#education" onclick="scrollToSection('education')"><i class="fas fa-graduation-cap"></i> Education</a></li><?php endif; ?>
+            <?php if ($achievements): ?><li><a href="#achievements" onclick="scrollToSection('achievements')"><i class="fas fa-trophy"></i> Achievements</a></li><?php endif; ?>
+            <?php if ($blogs): ?><li><a href="#blogs" onclick="scrollToSection('blogs')"><i class="fas fa-blog"></i> Blogs</a></li><?php endif; ?>
+            <li><a href="#contact" onclick="scrollToSection('contact')"><i class="fas fa-envelope"></i> Contact</a></li>
+            <?php if ($reviews): ?><li><a href="#reviews" onclick="scrollToSection('reviews')"><i class="fas fa-comments"></i> Reviews</a></li><?php endif; ?>
+        </ul>
+    </nav>
         <!-- Hero Section -->
-        <header class="hero-section glass-panel" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; padding: 3rem 2rem; border-radius: 16px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));">
+        <header class="hero-section glass-panel" id="hero" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; padding: 3rem 2rem; border-radius: 16px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));">
             
             <!-- Left Content -->
             <div style="display: flex; flex-direction: column; justify-content: center;">
@@ -240,7 +332,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
         </header>
 
         <!-- About Me Section -->
-        <section class="glass-panel about-section" style="animation-delay: 0.05s; display: grid; grid-template-columns: 1fr 1.5fr; gap: 3rem; align-items: center; margin-top: 2rem;">
+        <section class="glass-panel about-section" id="about" style="animation-delay: 0.05s; display: grid; grid-template-columns: 1fr 1.5fr; gap: 3rem; align-items: center; margin-top: 2rem;">
             <!-- Left Content - Animated Image -->
             <div style="display: flex; align-items: center; justify-content: center;">
                 <?php 
@@ -270,7 +362,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
 
         <!-- Skills -->
         <?php if ($skills): ?>
-        <section class="glass-panel" style="animation-delay: 0.1s;">
+        <section class="glass-panel" id="skills" style="animation-delay: 0.1s;">
             <h2><i class="fas fa-star" style="color: var(--accent);"></i> Skills</h2>
             <div class="card-grid" style="margin-top: 1.5rem;">
                 <?php foreach ($skills as $s): ?>
@@ -287,7 +379,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
 
         <!-- Work Experience -->
         <?php if ($work): ?>
-        <section class="glass-panel" style="animation-delay: 0.2s;">
+        <section class="glass-panel" id="work" style="animation-delay: 0.2s;">
             <h2><i class="fas fa-briefcase" style="color: var(--accent);"></i> Work Experience</h2>
             <div class="timeline" style="margin-top: 1.5rem;">
                 <?php foreach ($work as $w): ?>
@@ -304,7 +396,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
 
         <!-- Education -->
         <?php if ($education): ?>
-        <section class="glass-panel" style="animation-delay: 0.3s;">
+        <section class="glass-panel" id="education" style="animation-delay: 0.3s;">
             <h2><i class="fas fa-graduation-cap" style="color: var(--accent);"></i> Education</h2>
             <div class="timeline" style="margin-top: 1.5rem;">
                 <?php foreach ($education as $e): ?>
@@ -321,7 +413,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
 
         <!-- Achievements -->
         <?php if ($achievements): ?>
-        <section class="glass-panel" style="animation-delay: 0.4s;">
+        <section class="glass-panel" id="achievements" style="animation-delay: 0.4s;">
             <h2><i class="fas fa-trophy" style="color: var(--accent);"></i> Achievements</h2>
             <div class="card-grid" style="margin-top: 1.5rem;">
                 <?php foreach ($achievements as $a): ?>
@@ -337,7 +429,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
 
         <!-- Blogs -->
         <?php if ($blogs): ?>
-        <section class="glass-panel" style="animation-delay: 0.5s;">
+        <section class="glass-panel" id="blogs" style="animation-delay: 0.5s;">
             <h2><i class="fas fa-blog" style="color: var(--accent);"></i> Blog Posts</h2>
             <div style="margin-top: 1.5rem;">
                 <?php foreach ($blogs as $b): ?>
@@ -352,7 +444,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
         <?php endif; ?>
 
         <!-- Contact & Review -->
-        <section class="glass-panel" style="animation-delay: 0.6s; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <section class="glass-panel" id="contact" style="animation-delay: 0.6s; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
             <div>
                 <h2><i class="fas fa-envelope" style="color: var(--accent);"></i> Contact Me</h2>
                 <ul style="list-style: none; padding: 0; margin-top: 1.5rem;">
@@ -362,39 +454,123 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 </ul>
             </div>
             
-            <div>
-                <h2><i class="fas fa-star" style="color: var(--accent);"></i> Leave a Review</h2>
-                <form action="submit_review.php" method="POST" style="margin-top: 1.5rem;">
+            <div style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.05)); border: 1px solid rgba(79, 70, 229, 0.2); border-radius: 16px; padding: 2.5rem; backdrop-filter: blur(10px);">
+                <h2 style="color: var(--accent); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 1.8rem;">
+                    <i class="fas fa-star"></i> Leave a Review
+                </h2>
+                <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem;">Share your thoughts about this portfolio</p>
+                
+                <form action="submit_review.php" method="POST">
                     <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
                     <input type="hidden" name="username" value="<?php echo htmlspecialchars($username); ?>">
+                    <input type="hidden" name="rating" id="ratingInput" value="">
                     
+                    <!-- Name Input -->
                     <div class="form-group">
-                        <input type="text" name="visitor_name" required placeholder="Your Name">
+                        <label style="color: var(--text-secondary); font-weight: 600; margin-bottom: 0.75rem; display: block;">Your Name</label>
+                        <input type="text" name="visitor_name" required placeholder="Enter your full name" style="width: 100%; padding: 1rem 1.25rem; background: rgba(255, 255, 255, 0.03); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 1rem; transition: all 0.3s ease;" onmouseover="this.style.borderColor='rgba(79, 70, 229, 0.3)'; this.style.background='rgba(79, 70, 229, 0.05)';" onmouseout="this.style.borderColor='var(--border)'; this.style.background='rgba(255, 255, 255, 0.03)';">
                     </div>
                     
+                    <!-- Star Rating -->
                     <div class="form-group">
-                        <select name="rating" required style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff;">
-                            <option value="" disabled selected>Rate this portfolio</option>
-                            <option value="5">⭐⭐⭐⭐⭐ (5) Excellent</option>
-                            <option value="4">⭐⭐⭐⭐ (4) Good</option>
-                            <option value="3">⭐⭐⭐ (3) Average</option>
-                            <option value="2">⭐⭐ (2) Poor</option>
-                            <option value="1">⭐ (1) Terrible</option>
-                        </select>
+                        <label style="color: var(--text-secondary); font-weight: 600; margin-bottom: 1rem; display: block;">Rate this Portfolio</label>
+                        <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem;">
+                            <div id="starRating" style="display: flex; gap: 0.5rem;">
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <button type="button" class="star-btn" data-rating="<?php echo $i; ?>" style="font-size: 2.5rem; color: rgba(79, 70, 229, 0.3); cursor: pointer; background: none; border: none; transition: all 0.2s ease; padding: 0.25rem;" onmouseover="this.style.color='#f59e0b'; this.style.transform='scale(1.15)';" onmouseout="this.style.transform='scale(1)';">
+                                        ★
+                                    </button>
+                                <?php endfor; ?>
+                            </div>
+                            <span id="ratingText" style="color: var(--text-muted); font-weight: 600; margin-left: 1rem; min-width: 80px;">Select rating</span>
+                        </div>
                     </div>
                     
+                    <!-- Comment Input -->
                     <div class="form-group">
-                        <textarea name="comment" required placeholder="Leave a comment..." rows="3"></textarea>
+                        <label style="color: var(--text-secondary); font-weight: 600; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span>Your Review</span>
+                            <span id="charCount" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400;">0/500</span>
+                        </label>
+                        <textarea name="comment" required placeholder="Share your honest feedback about this portfolio..." rows="4" style="width: 100%; padding: 1rem 1.25rem; background: rgba(255, 255, 255, 0.03); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 1rem; resize: none; transition: all 0.3s ease;" onmouseover="this.style.borderColor='rgba(79, 70, 229, 0.3)'; this.style.background='rgba(79, 70, 229, 0.05)';" onmouseout="this.style.borderColor='var(--border)'; this.style.background='rgba(255, 255, 255, 0.03)';" oninput="updateCharCount(this);" maxlength="500"></textarea>
                     </div>
                     
-                    <button type="submit" class="btn"><i class="fas fa-paper-plane"></i> Submit Review</button>
+                    <!-- Submit Button -->
+                    <button type="submit" style="width: 100%; padding: 1.1rem 1.5rem; background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; letter-spacing: 0.3px; cursor: pointer; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); text-align: center; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); display: flex; align-items: center; justify-content: center; gap: 0.75rem;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(79, 70, 229, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(79, 70, 229, 0.3)';">
+                        <i class="fas fa-paper-plane"></i> Submit Your Review
+                    </button>
                 </form>
+                
+                <script>
+                    const ratingInput = document.getElementById('ratingInput');
+                    const ratingText = document.getElementById('ratingText');
+                    const starBtns = document.querySelectorAll('.star-btn');
+                    
+                    const ratingLabels = ['', 'Poor 😞', 'Average 😐', 'Good 😊', 'Excellent 😍', 'Outstanding ⭐'];
+                    const ratingColors = ['', '#ef4444', '#f59e0b', '#10b981', '#0ea5e9', '#6366f1'];
+                    
+                    starBtns.forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const rating = this.dataset.rating;
+                            ratingInput.value = rating;
+                            
+                            // Update all stars
+                            starBtns.forEach(b => {
+                                if (b.dataset.rating <= rating) {
+                                    b.style.color = ratingColors[rating];
+                                } else {
+                                    b.style.color = 'rgba(79, 70, 229, 0.3)';
+                                }
+                            });
+                            
+                            // Update text
+                            ratingText.textContent = ratingLabels[rating];
+                            ratingText.style.color = ratingColors[rating];
+                        });
+                        
+                        btn.addEventListener('mouseover', function() {
+                            const hoverRating = this.dataset.rating;
+                            starBtns.forEach(b => {
+                                if (b.dataset.rating <= hoverRating) {
+                                    b.style.color = ratingColors[hoverRating];
+                                } else {
+                                    b.style.color = 'rgba(79, 70, 229, 0.3)';
+                                }
+                            });
+                        });
+                        
+                        btn.addEventListener('mouseout', function() {
+                            const selectedRating = ratingInput.value || 0;
+                            starBtns.forEach(b => {
+                                if (b.dataset.rating <= selectedRating) {
+                                    b.style.color = ratingColors[selectedRating];
+                                } else {
+                                    b.style.color = 'rgba(79, 70, 229, 0.3)';
+                                }
+                            });
+                        });
+                    });
+                    
+                    function updateCharCount(textarea) {
+                        const count = textarea.value.length;
+                        document.getElementById('charCount').textContent = count + '/500';
+                        
+                        if (count > 400) {
+                            document.getElementById('charCount').style.color = '#f59e0b';
+                        } else if (count > 450) {
+                            document.getElementById('charCount').style.color = '#ef4444';
+                        } else {
+                            document.getElementById('charCount').style.color = 'var(--text-muted)';
+                        }
+                    }
+                </script>
             </div>
         </section>
 
         <!-- Reviews List -->
         <?php if ($reviews): ?>
-        <section class="glass-panel" style="animation-delay: 0.7s;">
+        <section class="glass-panel" id="reviews" style="animation-delay: 0.7s;">
             <h2><i class="fas fa-comments" style="color: var(--accent);"></i> Recent Reviews</h2>
             <div class="card-grid" style="margin-top: 1.5rem;">
                 <?php foreach ($reviews as $r): ?>
@@ -417,5 +593,51 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
 
         
     </div>
+
+    <script>
+        // Navigation active state on scroll
+        function updateActiveNav() {
+            const sections = document.querySelectorAll('section[id], header[id]');
+            const navLinks = document.querySelectorAll('.portfolio-nav a');
+            
+            let current = 'hero';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (window.scrollY >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Smooth scroll function
+        function scrollToSection(id) {
+            event.preventDefault();
+            const element = document.getElementById(id);
+            if (element) {
+                const navHeight = document.querySelector('.portfolio-nav').offsetHeight;
+                const elementPosition = element.offsetTop - navHeight - 20;
+                window.scrollTo({
+                    top: elementPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Update active state on scroll
+        window.addEventListener('scroll', updateActiveNav);
+        
+        // Initial call
+        updateActiveNav();
+    </script>
 </body>
 </html>

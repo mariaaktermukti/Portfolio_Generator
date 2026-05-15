@@ -23,10 +23,19 @@ $qr_api_url = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=" . url
             <img src="<?php echo htmlspecialchars($qr_api_url); ?>" alt="Portfolio QR Code" style="display: block;">
         </div>
         
-        <div style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; word-break: break-all;">
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="<?php echo htmlspecialchars($portfolio_url); ?>" target="_blank" class="btn" style="width: auto; padding: 0.7rem 1.5rem; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i> Preview Portfolio
+            </a>
+            <button type="button" class="btn" id="downloadQR" style="width: auto; padding: 0.7rem 1.5rem; font-size: 1rem;">
+                <i class="fas fa-download"></i> Download QR Code
+            </button>
+        </div>
+
+        <div style="margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; word-break: break-all;">
             <strong>Your Portfolio URL:</strong><br>
             <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 0.75rem; flex-wrap: wrap;">
-                <a href="<?php echo htmlspecialchars($portfolio_url); ?>" target="_blank" style="font-size: 1.1rem;"><?php echo htmlspecialchars($portfolio_url); ?></a>
+                <span style="font-size: 1rem; color: var(--text-muted);"><?php echo htmlspecialchars($portfolio_url); ?></span>
                 <button type="button" class="btn" id="copyUrlBtn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="copyToClipboard('<?php echo htmlspecialchars($portfolio_url); ?>', this)">
                     <i class="fas fa-copy"></i> Copy
                 </button>
@@ -63,4 +72,15 @@ function copyToClipboard(text, button) {
         alert('Failed to copy URL');
     });
 }
+
+// Download QR Code
+document.getElementById('downloadQR').addEventListener('click', function() {
+    const qrImage = document.querySelector('img[alt="Portfolio QR Code"]');
+    const link = document.createElement('a');
+    link.href = qrImage.src;
+    link.download = 'portfolio-qrcode.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
 </script>

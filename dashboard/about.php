@@ -71,10 +71,17 @@ $about = $stmt->fetch() ?: ['bio' => '', 'title' => '', 'profile_image' => '', '
                 <label>Profile Image</label>
                 <div style="display: flex; gap: 1rem; align-items: flex-start;">
                     <div style="flex: 1;">
-                        <input type="file" id="profileImageInput" accept="image/*" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%; cursor: pointer;">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">From URL</label>
+                            <input type="text" id="profileImageUrlInput" placeholder="Enter image URL" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%;">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">Or Upload File</label>
+                            <input type="file" id="profileImageInput" accept="image/*" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%; cursor: pointer;">
+                        </div>
                         <input type="hidden" name="profile_image" id="profileImageUrl" value="<?php echo htmlspecialchars($about['profile_image']); ?>">
                         <div id="profileImageLoader" style="display: none; margin-top: 0.5rem;">
-                            <i class="fas fa-spinner fa-spin"></i> Uploading image...
+                            <i class="fas fa-spinner fa-spin"></i> Processing image...
                         </div>
                         <div id="profileImagePreview" style="margin-top: 1rem;">
                             <?php if (!empty($about['profile_image'])): ?>
@@ -89,10 +96,17 @@ $about = $stmt->fetch() ?: ['bio' => '', 'title' => '', 'profile_image' => '', '
                 <label>About Image</label>
                 <div style="display: flex; gap: 1rem; align-items: flex-start;">
                     <div style="flex: 1;">
-                        <input type="file" id="aboutImageInput" accept="image/*" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%; cursor: pointer;">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">From URL</label>
+                            <input type="text" id="aboutImageUrlInput" placeholder="Enter image URL" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%;">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">Or Upload File</label>
+                            <input type="file" id="aboutImageInput" accept="image/*" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%; cursor: pointer;">
+                        </div>
                         <input type="hidden" name="about_image" id="aboutImageUrl" value="<?php echo htmlspecialchars($about['about_image']); ?>">
                         <div id="aboutImageLoader" style="display: none; margin-top: 0.5rem;">
-                            <i class="fas fa-spinner fa-spin"></i> Uploading image...
+                            <i class="fas fa-spinner fa-spin"></i> Processing image...
                         </div>
                         <div id="aboutImagePreview" style="margin-top: 1rem;">
                             <?php if (!empty($about['about_image'])): ?>
@@ -116,12 +130,33 @@ $about = $stmt->fetch() ?: ['bio' => '', 'title' => '', 'profile_image' => '', '
 <?php include 'inc/foot.php'; ?>
 
 <script>
-function setupImageUpload(inputId, uploaderId, previewId, urlInputId) {
+function setupImageUpload(inputId, urlInputId, uploaderId, previewId, urlInputFieldId) {
     const fileInput = document.getElementById(inputId);
+    const urlInputField = document.getElementById(urlInputFieldId);
     const loader = document.getElementById(uploaderId);
     const preview = document.getElementById(previewId);
     const urlInput = document.getElementById(urlInputId);
     
+    // Handle URL input
+    urlInputField.addEventListener('blur', function() {
+        const url = this.value.trim();
+        if (url) {
+            // Update hidden input with URL
+            urlInput.value = url;
+            
+            // Show preview
+            preview.innerHTML = `<img src="${url}" alt="Image Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;" onerror="this.parentElement.innerHTML='<p style=\"color: #f44;\">Failed to load image</p>'">`;
+            
+            // Show success message
+            loader.style.display = 'block';
+            loader.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> Image URL set!';
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 2000);
+        }
+    });
+    
+    // Handle file upload
     fileInput.addEventListener('change', async function(e) {
         const file = this.files[0];
         if (!file) return;
@@ -145,6 +180,9 @@ function setupImageUpload(inputId, uploaderId, previewId, urlInputId) {
                 // Update hidden input with URL
                 urlInput.value = result.url;
                 
+                // Clear URL input field
+                urlInputField.value = '';
+                
                 // Show preview
                 preview.innerHTML = `<img src="${result.url}" alt="Image Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;">`;
                 
@@ -167,7 +205,7 @@ function setupImageUpload(inputId, uploaderId, previewId, urlInputId) {
 
 // Initialize uploads
 document.addEventListener('DOMContentLoaded', function() {
-    setupImageUpload('profileImageInput', 'profileImageLoader', 'profileImagePreview', 'profileImageUrl');
-    setupImageUpload('aboutImageInput', 'aboutImageLoader', 'aboutImagePreview', 'aboutImageUrl');
+    setupImageUpload('profileImageInput', 'profileImageUrl', 'profileImageLoader', 'profileImagePreview', 'profileImageUrlInput');
+    setupImageUpload('aboutImageInput', 'aboutImageUrl', 'aboutImageLoader', 'aboutImagePreview', 'aboutImageUrlInput');
 });
 </script>

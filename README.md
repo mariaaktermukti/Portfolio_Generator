@@ -35,7 +35,7 @@ The **Auto Portfolio Generator** is a dynamic, fully responsive platform built w
 - **Manage Achievements**: [http://localhost/Portfolio_generator/dashboard/achievements.php](http://localhost/Portfolio_generator/dashboard/achievements.php)
 - **Manage Blogs**: [http://localhost/Portfolio_generator/dashboard/blogs.php](http://localhost/Portfolio_generator/dashboard/blogs.php)
 - **Manage Contact Info**: [http://localhost/Portfolio_generator/dashboard/contact.php](http://localhost/Portfolio_generator/dashboard/contact.php)
-- **Generate QR Code**: [http://localhost/Portfolio_generator/dashboard/qrcode.php](http://localhost/Portfolio_generator/dashboard/qrcode.php)
+- **Share Portfolio**: [http://localhost/Portfolio_generator/dashboard/shareable_link.php](http://localhost/Portfolio_generator/dashboard/shareable_link.php)
 
 ### 🌍 Public Portfolio & Tools
 - **Public Portfolio View**: `http://localhost/Portfolio_generator/public/portfolio.php?user=YOUR_USERNAME`
