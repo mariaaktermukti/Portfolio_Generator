@@ -46,6 +46,20 @@ $username = $_SESSION['username'];
                 ?>
                 <p style="font-size: 2rem; font-weight: bold; margin-top: 1rem;"><?php echo $reviews; ?></p>
             </div>
+            <div class="card" style="border: 2px solid rgba(251, 146, 60, 0.3); background: rgba(251, 146, 60, 0.05);">
+                <h3><i class="fas fa-hourglass-half" style="color: #f97316;"></i> Pending Reviews</h3>
+                <?php
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM reviews WHERE user_id = ? AND status = 'pending'");
+                $stmt->execute([$user_id]);
+                $pending = $stmt->fetchColumn();
+                ?>
+                <p style="font-size: 2rem; font-weight: bold; margin-top: 1rem; color: #f97316;"><?php echo $pending; ?></p>
+                <?php if ($pending > 0): ?>
+                    <a href="reviews.php" style="display: inline-block; margin-top: 1rem; padding: 0.5rem 1rem; background: rgba(251, 146, 60, 0.2); color: #f97316; text-decoration: none; border-radius: 6px; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='rgba(251, 146, 60, 0.3)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(251, 146, 60, 0.2)'; this.style.transform='translateY(0)';">
+                        Approve Reviews →
+                    </a>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </main>

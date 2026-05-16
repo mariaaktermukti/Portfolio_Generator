@@ -8,7 +8,15 @@ try {
     // Column already exists
 }
 
+// Add status column to reviews if it doesn't exist
+try {
+    $pdo->exec("ALTER TABLE reviews ADD COLUMN status VARCHAR(20) DEFAULT 'pending'");
+} catch (PDOException $e) {
+    // Column already exists
+}
+
 $username = $_GET['user'] ?? '';
+$review_submitted = isset($_GET['review_submitted']) && $_GET['review_submitted'] === '1';
 
 if (!$username) {
     die("User not specified.");
@@ -59,8 +67,15 @@ $stmt_blogs = $pdo->prepare("SELECT b.* FROM blogs b JOIN users u ON b.user_id =
 $stmt_blogs->execute([$user_id]);
 $blogs = $stmt_blogs->fetchAll();
 
-// Fetch Reviews
-$stmt_reviews = $pdo->prepare("SELECT * FROM reviews WHERE user_id = ? ORDER BY created_at DESC");
+// Add status column if it doesn't exist
+try {
+    $pdo->exec("ALTER TABLE reviews ADD COLUMN status VARCHAR(20) DEFAULT 'pending'");
+} catch (PDOException $e) {
+    // Column already exists
+}
+
+// Fetch only APPROVED Reviews
+$stmt_reviews = $pdo->prepare("SELECT * FROM reviews WHERE user_id = ? AND status = 'approved' ORDER BY created_at DESC");
 $stmt_reviews->execute([$user_id]);
 $reviews = $stmt_reviews->fetchAll();
 
@@ -249,6 +264,31 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             <?php if ($reviews): ?><li><a href="#reviews" onclick="scrollToSection('reviews')"><i class="fas fa-comments"></i> Reviews</a></li><?php endif; ?>
         </ul>
     </nav>
+
+    <!-- Success Notification -->
+    <?php if ($review_submitted): ?>
+        <div style="max-width: 1280px; margin: 1rem auto; padding: 0 1rem;">
+            <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05)); border-left: 4px solid #22c55e; border-radius: 8px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; animation: slideDown 0.4s ease-out;">
+                <i class="fas fa-check-circle" style="font-size: 1.5rem; color: #22c55e;"></i>
+                <div>
+                    <h3 style="margin: 0 0 0.25rem 0; color: #22c55e; font-weight: 600;">Review Submitted!</h3>
+                    <p style="margin: 0; color: rgba(34, 197, 94, 0.8); font-size: 0.95rem;">Thank you for your review! It will appear on this portfolio after admin approval.</p>
+                </div>
+            </div>
+            <style>
+                @keyframes slideDown {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            </style>
+        </div>
+    <?php endif; ?>
 
     <div class="portfolio-container">
         <!-- Hero Section -->
@@ -738,26 +778,119 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             </div>
         </section>
 
-        <!-- Reviews List -->
+        <!-- Reviews List - Carousel -->
         <?php if ($reviews): ?>
-        <section class="glass-panel" id="reviews" style="animation-delay: 0.7s;">
-            <h2><i class="fas fa-comments" style="color: var(--accent);"></i> Recent Reviews</h2>
-            <div class="card-grid" style="margin-top: 1.5rem;">
-                <?php foreach ($reviews as $r): ?>
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                            <strong style="color: #fff;"><?php echo htmlspecialchars($r['visitor_name']); ?></strong>
-                            <span style="color: #f59e0b;">
-                                <?php echo str_repeat('★', $r['rating']) . str_repeat('☆', 5 - $r['rating']); ?>
-                            </span>
+        <section class="glass-panel" id="reviews" style="animation-delay: 0.7s; overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2><i class="fas fa-comments" style="color: var(--accent);"></i> Recent Reviews</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="carousel-btn" onclick="reviewCarousel(-1)" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(79, 70, 229, 0.2); border: 1px solid rgba(79, 70, 229, 0.3); color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.3)'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(79, 70, 229, 0.2)'; this.style.transform='scale(1)';">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="carousel-btn" onclick="reviewCarousel(1)" style="width: 40px; height: 40px; border-radius: 50%; background: rgba(79, 70, 229, 0.2); border: 1px solid rgba(79, 70, 229, 0.3); color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s;" onmouseover="this.style.background='rgba(79, 70, 229, 0.3)'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(79, 70, 229, 0.2)'; this.style.transform='scale(1)';">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div style="position: relative; overflow: hidden;">
+                <div id="reviewsCarousel" style="display: flex; gap: 1.5rem; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
+                    <?php foreach ($reviews as $r): ?>
+                        <div class="review-slide" style="flex: 0 0 calc(100% - 1.5rem); min-width: calc(100% - 1.5rem); background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.05)); border: 1px solid rgba(79, 70, 229, 0.2); border-radius: 12px; padding: 2rem; backdrop-filter: blur(10px); animation: slideIn 0.6s ease-out;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+                                <div>
+                                    <h3 style="color: #fff; margin: 0 0 0.5rem 0; font-size: 1.2rem;"><?php echo htmlspecialchars($r['visitor_name']); ?></h3>
+                                    <span style="color: #fbbf24; font-size: 1.1rem;">
+                                        <?php echo str_repeat('★', $r['rating']) . str_repeat('☆', 5 - $r['rating']); ?>
+                                    </span>
+                                </div>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">
+                                    <?php echo date('M j, Y', strtotime($r['created_at'])); ?>
+                                </span>
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.6; margin: 1rem 0; font-style: italic;">
+                                "<?php echo htmlspecialchars($r['comment']); ?>"
+                            </p>
                         </div>
-                        <p style="font-size: 0.95rem; font-style: italic;">"<?php echo htmlspecialchars($r['comment']); ?>"</p>
-                        <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); text-align: right;">
-                            <?php echo date('M j, Y', strtotime($r['created_at'])); ?>
-                        </div>
-                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;">
+                <?php foreach (array_keys($reviews) as $i): ?>
+                    <div class="carousel-dot" onclick="goToReview(<?php echo $i; ?>)" style="width: 8px; height: 8px; border-radius: 50%; background: <?php echo $i === 0 ? 'var(--accent)' : 'rgba(79, 70, 229, 0.3)'; ?>; cursor: pointer; transition: all 0.3s;"></div>
                 <?php endforeach; ?>
             </div>
+
+            <style>
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateX(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+
+                /* Responsive carousel */
+                @media (min-width: 768px) {
+                    .review-slide {
+                        flex: 0 0 calc(50% - 0.75rem) !important;
+                        min-width: calc(50% - 0.75rem) !important;
+                    }
+                }
+
+                @media (min-width: 1200px) {
+                    .review-slide {
+                        flex: 0 0 calc(33.333% - 1rem) !important;
+                        min-width: calc(33.333% - 1rem) !important;
+                    }
+                }
+            </style>
+
+            <script>
+                let currentReviewIndex = 0;
+                const reviewSlides = document.querySelectorAll('.review-slide');
+                const reviewCount = reviewSlides.length;
+
+                function updateCarouselPosition() {
+                    const carousel = document.getElementById('reviewsCarousel');
+                    const slideWidth = reviewSlides[0].offsetWidth + 24; // 24px gap
+                    carousel.style.transform = `translateX(-${currentReviewIndex * slideWidth}px)`;
+                    
+                    // Update dots
+                    document.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                        dot.style.background = i === currentReviewIndex ? 'var(--accent)' : 'rgba(79, 70, 229, 0.3)';
+                    });
+                }
+
+                function reviewCarousel(direction) {
+                    currentReviewIndex += direction;
+                    if (currentReviewIndex < 0) {
+                        currentReviewIndex = reviewCount - 1;
+                    } else if (currentReviewIndex >= reviewCount) {
+                        currentReviewIndex = 0;
+                    }
+                    updateCarouselPosition();
+                }
+
+                function goToReview(index) {
+                    currentReviewIndex = index;
+                    updateCarouselPosition();
+                }
+
+                // Auto-advance carousel every 5 seconds
+                setInterval(() => {
+                    if (reviewCount > 1) {
+                        reviewCarousel(1);
+                    }
+                }, 5000);
+
+                // Update on resize
+                window.addEventListener('resize', updateCarouselPosition);
+            </script>
         </section>
         <?php endif; ?>
 

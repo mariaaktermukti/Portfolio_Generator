@@ -36,37 +36,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Portfolio Generator</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        .auth-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            background: var(--bg-primary);
+        }
+        .auth-container {
+            display: flex;
+            max-width: 1280px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        .auth-image {
+            flex: 1;
+            background-image: url('https://static.vecteezy.com/system/resources/previews/016/143/128/non_2x/register-now-icon-in-comic-style-registration-cartoon-illustration-on-isolated-background-member-notification-splash-effect-sign-business-concept-vector.jpg');
+            background-size: cover;
+            background-position: center;
+            display: none;
+        }
+        @media(min-width: 768px) {
+            .auth-image { display: block; }
+        }
+        .auth-form-wrapper {
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
     <div class="auth-wrapper">
-        <div class="auth-box glass-panel">
-            <h2>Create Account</h2>
-            <?php if ($error): ?>
-                <div class="msg-error"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
-            <?php if ($success): ?>
-                <div class="msg-success"><?php echo htmlspecialchars($success); ?></div>
-                <p><a href="login.php" class="btn" style="margin-top: 1rem;">Go to Login</a></p>
-            <?php else: ?>
-                <form method="POST">
-                    <div class="form-group">
-                        <label>Username</label>
-                        <input type="text" name="username" required placeholder="Choose a username">
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" required placeholder="Enter your email">
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" name="password" required placeholder="Create a password">
-                    </div>
-                    <button type="submit">Register</button>
-                </form>
-                <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
-                    Already have an account? <a href="login.php">Login here</a>
-                </p>
-            <?php endif; ?>
+        <div class="auth-container">
+            <!-- Form on left for register -->
+            <div class="auth-form-wrapper">
+                <h2 style="margin-bottom: 2rem; color: #fff;">Create Account</h2>
+                <?php if ($error): ?>
+                    <div class="msg-error" style="margin-bottom: 1rem;"><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
+                <?php if ($success): ?>
+                    <div class="msg-success" style="margin-bottom: 1rem;"><?php echo htmlspecialchars($success); ?></div>
+                    <p style="text-align: center;"><a href="login.php" class="btn" style="margin-top: 1rem; display: inline-block;">Go to Login</a></p>
+                <?php else: ?>
+                    <form method="POST">
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label>Username</label>
+                            <input type="text" name="username" required placeholder="Choose a username">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label>Email</label>
+                            <input type="email" name="email" required placeholder="Enter your email">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label>Password</label>
+                            <input type="password" name="password" required placeholder="Create a password">
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%;">Register</button>
+                    </form>
+                    <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); text-align: center;">
+                        Already have an account? <a href="login.php" style="color: var(--accent); text-decoration: none; font-weight: 600;">Login here</a>
+                    </p>
+                <?php endif; ?>
+            </div>
+            <!-- Image on right for register -->
+            <div class="auth-image"></div>
         </div>
     </div>
 </body>
