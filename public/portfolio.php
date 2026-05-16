@@ -1,6 +1,13 @@
 <?php
 require_once '../config/db.php';
 
+// Add contact_image column if it doesn't exist
+try {
+    $pdo->exec("ALTER TABLE contact ADD COLUMN contact_image VARCHAR(255) DEFAULT ''");
+} catch (PDOException $e) {
+    // Column already exists
+}
+
 $username = $_GET['user'] ?? '';
 
 if (!$username) {
@@ -11,7 +18,7 @@ if (!$username) {
 $stmt = $pdo->prepare("
     SELECT u.id as user_id, u.username, u.email, 
            a.bio, a.title, a.profile_image, a.about_image, 
-           c.phone, c.address, c.linkedin, c.github
+           c.phone, c.address, c.linkedin, c.github, c.contact_image
     FROM users u
     LEFT JOIN about a ON u.id = a.user_id AND a.is_deleted = 0
     LEFT JOIN contact c ON u.id = c.user_id AND c.is_deleted = 0
@@ -72,13 +79,12 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Desktop first - 1280px max width */
         .portfolio-container {
             max-width: 1280px;
             width: 100%;
             margin: 0 auto;
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-           
+            padding: 2rem 0;
             box-sizing: border-box;
         }
 
@@ -98,13 +104,14 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             list-style: none;
             display: flex;
             gap: 0.5rem;
-            margin: 0;
+            margin: 0 auto;
             padding: 0;
             flex-wrap: wrap;
             max-width: 1280px;
-            margin: 0 auto;
+            width: 100%;
             align-items: center;
             justify-content: flex-start;
+            box-sizing: border-box;
         }
 
         .portfolio-nav a {
@@ -138,13 +145,25 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             scroll-behavior: smooth;
         }
 
-        @media (max-width: 1024px) {
+        /* Large Desktop (1920px and up) */
+        @media (min-width: 1920px) {
             .portfolio-container {
-                padding: 1.5rem;
+                padding: 2.5rem 0;
             }
             
             .portfolio-nav {
-                padding: 0.75rem 1rem;
+                padding: 1.2rem 2.5rem;
+            }
+        }
+
+        /* Tablet (1024px - 1279px) */
+        @media (max-width: 1279px) {
+            .portfolio-container {
+                padding: 1.5rem 0;
+            }
+            
+            .portfolio-nav {
+                padding: 0.75rem 1.5rem;
             }
             
             .portfolio-nav a {
@@ -153,13 +172,14 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             }
         }
 
-        @media (max-width: 768px) {
+        /* Tablet (768px - 1023px) */
+        @media (max-width: 1023px) {
             .portfolio-container {
-                padding: 1rem;
+                padding: 1.25rem 0;
             }
 
             .portfolio-nav {
-                padding: 0.5rem 1rem;
+                padding: 0.5rem 1.25rem;
                 overflow-x: auto;
             }
 
@@ -174,13 +194,42 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             }
         }
 
-        @media (max-width: 480px) {
+        /* Mobile (480px - 767px) */
+        @media (max-width: 767px) {
             .portfolio-container {
-                padding: 0.75rem;
+                padding: 1rem 0;
+            }
+
+            .portfolio-nav {
+                padding: 0.5rem 1rem;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .portfolio-nav ul {
+                gap: 0.2rem;
+            }
+
+            .portfolio-nav a {
+                padding: 0.35rem 0.5rem;
+                font-size: 0.75rem;
+                flex-shrink: 0;
+            }
+        }
+
+        /* Small Mobile (Below 480px) */
+        @media (max-width: 479px) {
+            .portfolio-container {
+                padding: 0.75rem 0;
             }
 
             .portfolio-nav {
                 padding: 0.5rem 0.75rem;
+            }
+
+            .portfolio-nav a {
+                padding: 0.3rem 0.4rem;
+                font-size: 0.7rem;
             }
         }
     </style>
@@ -200,6 +249,8 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             <?php if ($reviews): ?><li><a href="#reviews" onclick="scrollToSection('reviews')"><i class="fas fa-comments"></i> Reviews</a></li><?php endif; ?>
         </ul>
     </nav>
+
+    <div class="portfolio-container">
         <!-- Hero Section -->
         <header class="hero-section glass-panel" id="hero" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; padding: 3rem 2rem; border-radius: 16px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));">
             
@@ -298,26 +349,72 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                     50% { transform: translateY(-8px); }
                 }
 
-                @media (max-width: 768px) {
+                /* Desktop & Large Devices */
+                @media (min-width: 1024px) {
                     .hero-section, .about-section {
-                        grid-template-columns: 1fr !important;
-                        gap: 2rem !important;
-                        padding: 2rem 1.5rem !important;
+                        grid-template-columns: 1fr 1fr !important;
+                        gap: 3rem !important;
+                        padding: 3rem 2rem !important;
                     }
-
-                    .hero-section h1 {
-                        font-size: 2rem !important;
-                    }
-
-                    .hero-section h2 {
-                        font-size: 1.3rem !important;
+                    
+                    #contact {
+                        grid-template-columns: 1.5fr 1fr !important;
+                        gap: 3rem !important;
+                        padding: 3rem 2rem !important;
                     }
                 }
 
-                @media (max-width: 480px) {
+                /* Tablet Devices (1024px and below) */
+                @media (max-width: 1023px) {
+                    .hero-section, .about-section {
+                        grid-template-columns: 1fr !important;
+                        gap: 2rem !important;
+                        padding: 2.5rem 1.5rem !important;
+                    }
+
+                    #contact {
+                        grid-template-columns: 1fr !important;
+                        gap: 2rem !important;
+                        padding: 2.5rem 1.5rem !important;
+                    }
+
+                    .hero-section h1 {
+                        font-size: 2.2rem !important;
+                    }
+
+                    .hero-section h2 {
+                        font-size: 1.4rem !important;
+                    }
+                }
+
+                /* Small Tablets & Large Phones (768px - 1023px) */
+                @media (max-width: 767px) {
+                    .hero-section, .about-section {
+                        grid-template-columns: 1fr !important;
+                        gap: 1.5rem !important;
+                        padding: 2rem 1.25rem !important;
+                    }
+
+                    #contact {
+                        grid-template-columns: 1fr !important;
+                        gap: 1.5rem !important;
+                        padding: 2rem 1.25rem !important;
+                    }
+
+                    .hero-section h1 {
+                        font-size: 1.9rem !important;
+                    }
+
+                    .hero-section h2 {
+                        font-size: 1.2rem !important;
+                    }
+                }
+
+                /* Phones (480px - 767px) */
+                @media (max-width: 767px) {
                     .hero-section {
                         padding: 1.5rem 1rem !important;
-                        gap: 1.5rem !important;
+                        gap: 1.25rem !important;
                     }
 
                     .hero-section h1 {
@@ -326,6 +423,37 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
 
                     .hero-section h2 {
                         font-size: 1.1rem !important;
+                    }
+
+                    .hero-section .social-links {
+                        gap: 0.75rem !important;
+                    }
+                }
+
+                /* Small Phones (Below 480px) */
+                @media (max-width: 479px) {
+                    .hero-section, .about-section {
+                        grid-template-columns: 1fr !important;
+                        gap: 1rem !important;
+                        padding: 1.25rem 0.75rem !important;
+                    }
+
+                    #contact {
+                        grid-template-columns: 1fr !important;
+                        gap: 1rem !important;
+                        padding: 1.25rem 0.75rem !important;
+                    }
+
+                    .hero-section h1 {
+                        font-size: 1.5rem !important;
+                    }
+
+                    .hero-section h2 {
+                        font-size: 1rem !important;
+                    }
+
+                    .hero-section .social-links {
+                        gap: 0.5rem !important;
                     }
                 }
             </style>
@@ -444,16 +572,8 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
         <?php endif; ?>
 
         <!-- Contact & Review -->
-        <section class="glass-panel" id="contact" style="animation-delay: 0.6s; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-            <div>
-                <h2><i class="fas fa-envelope" style="color: var(--accent);"></i> Contact Me</h2>
-                <ul style="list-style: none; padding: 0; margin-top: 1.5rem;">
-                    <li style="margin-bottom: 1rem;"><i class="fas fa-envelope" style="color: var(--accent); width: 25px;"></i> <?php echo htmlspecialchars($profile['email']); ?></li>
-                    <?php if ($profile['phone']): ?><li style="margin-bottom: 1rem;"><i class="fas fa-phone" style="color: var(--accent); width: 25px;"></i> <?php echo htmlspecialchars($profile['phone']); ?></li><?php endif; ?>
-                    <?php if ($profile['address']): ?><li style="margin-bottom: 1rem;"><i class="fas fa-map-marker-alt" style="color: var(--accent); width: 25px;"></i> <?php echo htmlspecialchars($profile['address']); ?></li><?php endif; ?>
-                </ul>
-            </div>
-            
+        <section class="glass-panel" id="contact" style="animation-delay: 0.6s; display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem;">
+            <!-- Left: Review Form -->
             <div style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(14, 165, 233, 0.05)); border: 1px solid rgba(79, 70, 229, 0.2); border-radius: 16px; padding: 2.5rem; backdrop-filter: blur(10px);">
                 <h2 style="color: var(--accent); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 1.8rem;">
                     <i class="fas fa-star"></i> Leave a Review
@@ -565,6 +685,56 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                         }
                     }
                 </script>
+            </div>
+            
+            <!-- Right: Contact Info with Image -->
+            <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(79, 70, 229, 0.08)); border: 1px solid rgba(14, 165, 233, 0.2); border-radius: 16px; padding: 2.5rem; backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 2rem; height: 100%;">
+                <!-- Contact Image -->
+                <?php if (!empty($profile['contact_image'])): ?>
+                    <div style="width: 100%; border-radius: 12px; overflow: hidden; ">
+                        <img src="<?php echo htmlspecialchars($profile['contact_image']); ?>" alt="Contact" style="width: 100%; height: 260px; object-fit: cover; display: block; border-radius: 12px; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';">
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Contact Information -->
+                <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                    <h2 style="color: var(--accent); margin-bottom: 1.5rem; font-size: 1.8rem; display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-envelope-open-text"></i> Get In Touch
+                    </h2>
+                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.25rem;">
+                        <li style="display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; background: rgba(255, 255, 255, 0.03); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'; this.style.borderColor='rgba(79, 70, 229, 0.2)'; this.style.transform='translateX(5px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.03)'; this.style.borderColor='rgba(255, 255, 255, 0.05)'; this.style.transform='translateX(0)';">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(79, 70, 229, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 1.25rem; flex-shrink: 0;">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Email</span>
+                                <span style="color: var(--text-main); font-weight: 500; font-size: 1rem; word-break: break-all;"><?php echo htmlspecialchars($profile['email']); ?></span>
+                            </div>
+                        </li>
+                        <?php if ($profile['phone']): ?>
+                            <li style="display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; background: rgba(255, 255, 255, 0.03); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'; this.style.borderColor='rgba(79, 70, 229, 0.2)'; this.style.transform='translateX(5px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.03)'; this.style.borderColor='rgba(255, 255, 255, 0.05)'; this.style.transform='translateX(0)';">
+                                <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(79, 70, 229, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 1.25rem; flex-shrink: 0;">
+                                    <i class="fas fa-phone-alt"></i>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Phone</span>
+                                    <span style="color: var(--text-main); font-weight: 500; font-size: 1rem;"><?php echo htmlspecialchars($profile['phone']); ?></span>
+                                </div>
+                            </li>
+                        <?php endif; ?>
+                        <?php if ($profile['address']): ?>
+                            <li style="display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem; background: rgba(255, 255, 255, 0.03); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(79, 70, 229, 0.1)'; this.style.borderColor='rgba(79, 70, 229, 0.2)'; this.style.transform='translateX(5px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.03)'; this.style.borderColor='rgba(255, 255, 255, 0.05)'; this.style.transform='translateX(0)';">
+                                <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(79, 70, 229, 0.15); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 1.25rem; flex-shrink: 0;">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Location</span>
+                                    <span style="color: var(--text-main); font-weight: 500; font-size: 1rem; line-height: 1.4;"><?php echo htmlspecialchars($profile['address']); ?></span>
+                                </div>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
             </div>
         </section>
 
