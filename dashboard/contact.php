@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once '../config/db.php';
 
@@ -9,6 +9,8 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $success = '';
+$edit_data = null;
+$edit_id = null;
 
 // Add contact_image column if it doesn't exist
 try {
@@ -18,27 +20,44 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $phone = $_POST['phone'] ?? '';
-    $address = $_POST['address'] ?? '';
-    $linkedin = $_POST['linkedin'] ?? '';
-    $github = $_POST['github'] ?? '';
-    $contact_image = $_POST['contact_image'] ?? '';
+    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+        $id = $_POST['id'];
+        $stmt = $pdo->prepare("UPDATE contact SET is_deleted = 1 WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $user_id]);
+        $_SESSION['success_msg'] = "Contact entry deleted.";
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'edit') {
+        $edit_id = $_POST['id'];
+        $phone = $_POST['phone'] ?? '';
+        $address = $_POST['address'] ?? '';
+        $linkedin = $_POST['linkedin'] ?? '';
+        $github = $_POST['github'] ?? '';
+        $contact_image = $_POST['contact_image'] ?? '';
 
-    $stmt = $pdo->prepare("SELECT id FROM contact WHERE user_id = ? AND is_deleted = 0");
-    $stmt->execute([$user_id]);
-    $exists = $stmt->fetch();
-
-    if ($exists) {
-        $stmt = $pdo->prepare("UPDATE contact SET phone = ?, address = ?, linkedin = ?, github = ?, contact_image = ? WHERE user_id = ? AND is_deleted = 0");
-        $stmt->execute([$phone, $address, $linkedin, $github, $contact_image, $user_id]);
+        $stmt = $pdo->prepare("UPDATE contact SET phone = ?, address = ?, linkedin = ?, github = ?, contact_image = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$phone, $address, $linkedin, $github, $contact_image, $edit_id, $user_id]);
+        $_SESSION['success_msg'] = "Contact entry updated.";
     } else {
+        $phone = $_POST['phone'] ?? '';
+        $address = $_POST['address'] ?? '';
+        $linkedin = $_POST['linkedin'] ?? '';
+        $github = $_POST['github'] ?? '';
+        $contact_image = $_POST['contact_image'] ?? '';
+
         $stmt = $pdo->prepare("INSERT INTO contact (user_id, phone, address, linkedin, github, contact_image) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->execute([$user_id, $phone, $address, $linkedin, $github, $contact_image]);
+        $_SESSION['success_msg'] = "Contact entry added.";
     }
     
-    $_SESSION['success_msg'] = "Contact information updated successfully!";
     header('Location: contact.php');
     exit;
+}
+
+// Check if editing
+if (isset($_GET['edit'])) {
+    $edit_id = $_GET['edit'];
+    $stmt = $pdo->prepare("SELECT * FROM contact WHERE id = ? AND user_id = ? AND is_deleted = 0");
+    $stmt->execute([$edit_id, $user_id]);
+    $edit_data = $stmt->fetch();
 }
 
 if (isset($_SESSION['success_msg'])) {
@@ -46,9 +65,9 @@ if (isset($_SESSION['success_msg'])) {
     unset($_SESSION['success_msg']);
 }
 
-$stmt = $pdo->prepare("SELECT * FROM contact WHERE user_id = ? AND is_deleted = 0");
+$stmt = $pdo->prepare("SELECT * FROM contact WHERE user_id = ? AND is_deleted = 0 ORDER BY id DESC");
 $stmt->execute([$user_id]);
-$contact = $stmt->fetch() ?: ['phone' => '', 'address' => '', 'linkedin' => '', 'github' => '', 'contact_image' => ''];
+$contacts = $stmt->fetchAll();
 
 ?>
 <?php include 'inc/head.php'; ?>
@@ -63,134 +82,73 @@ $contact = $stmt->fetch() ?: ['phone' => '', 'address' => '', 'linkedin' => '', 
         <?php endif; ?>
         
         <form method="POST">
+            <h3><?php echo $edit_data ? 'Edit Contact Information' : 'Add Contact Information'; ?></h3>
+            <?php if ($edit_data): ?>
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="id" value="<?php echo $edit_data['id']; ?>">
+            <?php endif; ?>
+
             <div class="form-group">
-                <label>Contact Section Image</label>
-                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                    <div style="flex: 1;">
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">From URL</label>
-                            <input type="text" id="contactImageUrlInput" placeholder="Enter image URL" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%;">
-                        </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">Or Upload File</label>
-                            <input type="file" id="contactImageInput" accept="image/*" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%; cursor: pointer;">
-                        </div>
-                        <input type="hidden" name="contact_image" id="contactImageUrl" value="<?php echo htmlspecialchars($contact['contact_image']); ?>">
-                        <div id="contactImageLoader" style="display: none; margin-top: 0.5rem;">
-                            <i class="fas fa-spinner fa-spin"></i> Processing image...
-                        </div>
-                        <div id="contactImagePreview" style="margin-top: 1rem;">
-                            <?php if (!empty($contact['contact_image'])): ?>
-                                <img src="<?php echo htmlspecialchars($contact['contact_image']); ?>" alt="Contact Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;">
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
+                <label>Contact Section Image URL</label>
+                <input type="text" name="contact_image" value="<?php echo htmlspecialchars($edit_data['contact_image'] ?? ''); ?>" placeholder="Enter image URL" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%;">
             </div>
             
             <div class="form-group">
                 <label>Phone</label>
-                <input type="text" name="phone" value="<?php echo htmlspecialchars($contact['phone']); ?>" placeholder="+1 234 567 890">
+                <input type="text" name="phone" value="<?php echo htmlspecialchars($edit_data['phone'] ?? ''); ?>" placeholder="+1 234 567 890">
             </div>
             
             <div class="form-group">
                 <label>Address</label>
-                <textarea name="address" rows="3" placeholder="City, Country"><?php echo htmlspecialchars($contact['address']); ?></textarea>
+                <textarea name="address" rows="3" placeholder="City, Country"><?php echo htmlspecialchars($edit_data['address'] ?? ''); ?></textarea>
             </div>
             
             <div class="form-group">
                 <label>LinkedIn URL</label>
-                <input type="url" name="linkedin" value="<?php echo htmlspecialchars($contact['linkedin']); ?>" placeholder="https://linkedin.com/in/username">
+                <input type="url" name="linkedin" value="<?php echo htmlspecialchars($edit_data['linkedin'] ?? ''); ?>" placeholder="https://linkedin.com/in/username">
             </div>
             
             <div class="form-group">
                 <label>GitHub URL</label>
-                <input type="url" name="github" value="<?php echo htmlspecialchars($contact['github']); ?>" placeholder="https://github.com/username">
+                <input type="url" name="github" value="<?php echo htmlspecialchars($edit_data['github'] ?? ''); ?>" placeholder="https://github.com/username">
             </div>
             
-            <button type="submit" class="btn">Save Changes</button>
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn"><?php echo $edit_data ? 'Update Contact' : 'Save Contact'; ?></button>
+                <?php if ($edit_data): ?>
+                    <a href="contact.php" class="btn btn-outline" style="text-decoration: none; padding: 0.8rem 1.5rem; border: 1px solid var(--border); border-radius: 8px; color: #fff;">Cancel</a>
+                <?php endif; ?>
+            </div>
         </form>
+
+        <h3 style="margin-top: 3rem;">Saved Contact Information</h3>
+        <div class="list-container" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+            <?php foreach ($contacts as $item): ?>
+                <div class="list-item glass-panel" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px;">
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <?php if (!empty($item['contact_image'])): ?>
+                            <img src="<?php echo htmlspecialchars($item['contact_image']); ?>" alt="Contact Image" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                        <?php endif; ?>
+                        <div>
+                            <h4 style="margin: 0;"><?php echo htmlspecialchars($item['phone']); ?></h4>
+                            <p style="margin: 0.5rem 0 0 0; color: #aaa; font-size: 0.9rem;"><?php echo htmlspecialchars($item['address']); ?></p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="?edit=<?php echo $item['id']; ?>" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; text-decoration: none;">Edit</a>
+                        <form method="POST" style="margin: 0; display: inline;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
+                            <button type="submit" class="btn" onclick="return confirm('Are you sure you want to delete this entry?')" style="background: rgba(255, 50, 50, 0.2); border: 1px solid rgba(255, 50, 50, 0.4); padding: 0.5rem 1rem; font-size: 0.9rem; color: #fff;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            <?php if (empty($contacts)): ?>
+                <p style="color: #aaa;">No contact information saved yet.</p>
+            <?php endif; ?>
+        </div>
     </div>
 </main>
 
 <?php include 'inc/foot.php'; ?>
-
-<script>
-function setupImageUpload(inputId, urlInputId, uploaderId, previewId, urlInputFieldId) {
-    const fileInput = document.getElementById(inputId);
-    const urlInputField = document.getElementById(urlInputFieldId);
-    const loader = document.getElementById(uploaderId);
-    const preview = document.getElementById(previewId);
-    const urlInput = document.getElementById(urlInputId);
-    
-    // Handle URL input
-    urlInputField.addEventListener('blur', function() {
-        const url = this.value.trim();
-        if (url) {
-            // Update hidden input with URL
-            urlInput.value = url;
-            
-            // Show preview
-            preview.innerHTML = `<img src="${url}" alt="Image Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;" onerror="this.parentElement.innerHTML='<p style=\"color: #f44;\">Failed to load image</p>'">`;
-            
-            // Show success message
-            loader.style.display = 'block';
-            loader.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> Image URL set!';
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 2000);
-        }
-    });
-    
-    // Handle file upload
-    fileInput.addEventListener('change', async function(e) {
-        const file = this.files[0];
-        if (!file) return;
-        
-        // Show loader
-        loader.style.display = 'block';
-        
-        // Create FormData
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        try {
-            const response = await fetch('upload_image.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                // Update hidden input with URL
-                urlInput.value = result.url;
-                
-                // Clear URL input field
-                urlInputField.value = '';
-                
-                // Show preview
-                preview.innerHTML = `<img src="${result.url}" alt="Image Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;">`;
-                
-                // Show success message
-                loader.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> Upload successful!';
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                }, 2000);
-            } else {
-                throw new Error(result.error || 'Upload failed');
-            }
-        } catch (error) {
-            loader.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> ' + error.message;
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 3000);
-        }
-    });
-}
-
-// Initialize uploads
-document.addEventListener('DOMContentLoaded', function() {
-    setupImageUpload('contactImageInput', 'contactImageUrl', 'contactImageLoader', 'contactImagePreview', 'contactImageUrlInput');
-});
-</script>

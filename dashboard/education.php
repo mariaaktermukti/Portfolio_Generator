@@ -12,6 +12,13 @@ $success = '';
 $edit_data = null;
 $edit_id = null;
 
+// Add result column if it doesn't exist
+try {
+    $pdo->exec("ALTER TABLE education ADD COLUMN result VARCHAR(50) DEFAULT ''");
+} catch (PDOException $e) {
+    // Column already exists
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'delete') {
         $id = $_POST['id'];
@@ -25,9 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $start_date = $_POST['start_date'] ?? null;
         $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
         $description = $_POST['description'] ?? '';
+        $result = $_POST['result'] ?? '';
 
-        $stmt = $pdo->prepare("UPDATE education SET degree = ?, institution = ?, start_date = ?, end_date = ?, description = ? WHERE id = ? AND user_id = ?");
-        $stmt->execute([$degree, $institution, $start_date, $end_date, $description, $edit_id, $user_id]);
+        $stmt = $pdo->prepare("UPDATE education SET degree = ?, institution = ?, start_date = ?, end_date = ?, description = ?, result = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$degree, $institution, $start_date, $end_date, $description, $result, $edit_id, $user_id]);
         $_SESSION['success_msg'] = "Education entry updated.";
     } else {
         $degree = $_POST['degree'] ?? '';
@@ -35,9 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $start_date = $_POST['start_date'] ?? null;
         $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
         $description = $_POST['description'] ?? '';
+        $result = $_POST['result'] ?? '';
 
-        $stmt = $pdo->prepare("INSERT INTO education (user_id, degree, institution, start_date, end_date, description) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$user_id, $degree, $institution, $start_date, $end_date, $description]);
+        $stmt = $pdo->prepare("INSERT INTO education (user_id, degree, institution, start_date, end_date, description, result) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $degree, $institution, $start_date, $end_date, $description, $result]);
         $_SESSION['success_msg'] = "Education entry added.";
     }
     header('Location: education.php');
@@ -88,6 +97,11 @@ $educations = $stmt->fetchAll();
                 <input type="text" name="institution" required placeholder="e.g. MIT" value="<?php echo htmlspecialchars($edit_data['institution'] ?? ''); ?>">
             </div>
             
+            <div class="form-group">
+                <label>Result / CGPA / GPA</label>
+                <input type="text" name="result" placeholder="e.g. GPA 5.00 or CGPA 3.85" value="<?php echo htmlspecialchars($edit_data['result'] ?? ''); ?>">
+            </div>
+            
             <div class="form-group" style="display: flex; gap: 1rem;">
                 <div style="flex: 1;">
                     <label>Start Date</label>
@@ -124,6 +138,9 @@ $educations = $stmt->fetchAll();
                         <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
                             <i class="fas fa-university"></i> <?php echo htmlspecialchars($edu['institution']); ?> | 
                             <i class="fas fa-calendar-alt"></i> <?php echo $edu['start_date']; ?> to <?php echo $edu['end_date'] ?: 'Present'; ?>
+                            <?php if (!empty($edu['result'])): ?>
+                                <br><i class="fas fa-graduation-cap"></i> Result: <strong><?php echo htmlspecialchars($edu['result']); ?></strong>
+                            <?php endif; ?>
                         </div>
                         <p style="margin-bottom: 1rem;"><?php echo htmlspecialchars($edu['description']); ?></p>
                         <div style="display: flex; gap: 0.5rem;">

@@ -9,203 +9,120 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $success = '';
+$edit_data = null;
+$edit_id = null;
 
-// Add about_image column if it doesn't exist
 try {
     $pdo->exec("ALTER TABLE about ADD COLUMN about_image VARCHAR(255) DEFAULT ''");
-} catch (PDOException $e) {
-    // Column already exists
-}
+} catch (PDOException $e) {}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $bio = $_POST['bio'] ?? '';
-    $title = $_POST['title'] ?? '';
-    $profile_image = $_POST['profile_image'] ?? '';
-    $about_image = $_POST['about_image'] ?? '';
-
-    $stmt = $pdo->prepare("SELECT id FROM about WHERE user_id = ? AND is_deleted = 0");
-    $stmt->execute([$user_id]);
-    $exists = $stmt->fetch();
-
-    if ($exists) {
-        $stmt = $pdo->prepare("UPDATE about SET bio = ?, title = ?, profile_image = ?, about_image = ? WHERE user_id = ? AND is_deleted = 0");
-        $stmt->execute([$bio, $title, $profile_image, $about_image, $user_id]);
+    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+        $id = $_POST['id'];
+        $stmt = $pdo->prepare("UPDATE about SET is_deleted = 1 WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $user_id]);
+        $_SESSION['success_msg'] = "About entry deleted.";
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'edit') {
+        $edit_id = $_POST['id'];
+        $bio = $_POST['bio'] ?? '';
+        $title = $_POST['title'] ?? '';
+        $profile_image = $_POST['profile_image'] ?? '';
+        $about_image = $_POST['about_image'] ?? '';
+        $stmt = $pdo->prepare("UPDATE about SET bio = ?, title = ?, profile_image = ?, about_image = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$bio, $title, $profile_image, $about_image, $edit_id, $user_id]);
+        $_SESSION['success_msg'] = "About entry updated.";
     } else {
+        $bio = $_POST['bio'] ?? '';
+        $title = $_POST['title'] ?? '';
+        $profile_image = $_POST['profile_image'] ?? '';
+        $about_image = $_POST['about_image'] ?? '';
         $stmt = $pdo->prepare("INSERT INTO about (user_id, bio, title, profile_image, about_image) VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([$user_id, $bio, $title, $profile_image, $about_image]);
+        $_SESSION['success_msg'] = "About entry added.";
     }
-    
-    $_SESSION['success_msg'] = "About information updated successfully!";
     header('Location: about.php');
     exit;
 }
 
+if (isset($_GET['edit'])) {
+    $edit_id = $_GET['edit'];
+    $stmt = $pdo->prepare("SELECT * FROM about WHERE id = ? AND user_id = ? AND is_deleted = 0");
+    $stmt->execute([$edit_id, $user_id]);
+    $edit_data = $stmt->fetch();
+}
 if (isset($_SESSION['success_msg'])) {
     $success = $_SESSION['success_msg'];
     unset($_SESSION['success_msg']);
 }
-
-$stmt = $pdo->prepare("SELECT * FROM about WHERE user_id = ? AND is_deleted = 0");
+$stmt = $pdo->prepare("SELECT * FROM about WHERE user_id = ? AND is_deleted = 0 ORDER BY id DESC");
 $stmt->execute([$user_id]);
-$about = $stmt->fetch() ?: ['bio' => '', 'title' => '', 'profile_image' => '', 'about_image' => ''];
-
+$abouts = $stmt->fetchAll();
 ?>
 <?php include 'inc/head.php'; ?>
 <?php include 'inc/sidebar.php'; ?>
-
 <main class="main-content">
     <div class="glass-panel">
         <h2>Manage About Section</h2>
-        
         <?php if ($success): ?>
             <div class="msg-success"><?php echo htmlspecialchars($success); ?></div>
         <?php endif; ?>
-        
         <form method="POST">
+            <h3><?php echo $edit_data ? 'Edit About Information' : 'Add About Information'; ?></h3>
+            <?php if ($edit_data): ?>
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="id" value="<?php echo $edit_data['id']; ?>">
+            <?php endif; ?>
             <div class="form-group">
                 <label>Professional Title</label>
-                <input type="text" name="title" value="<?php echo htmlspecialchars($about['title']); ?>" required placeholder="e.g. Full Stack Developer">
+                <input type="text" name="title" value="<?php echo htmlspecialchars($edit_data['title'] ?? ''); ?>" required placeholder="e.g. Full Stack Developer">
             </div>
-            
             <div class="form-group">
-                <label>Profile Image</label>
-                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                    <div style="flex: 1;">
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">From URL</label>
-                            <input type="text" id="profileImageUrlInput" placeholder="Enter image URL" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%;">
-                        </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">Or Upload File</label>
-                            <input type="file" id="profileImageInput" accept="image/*" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%; cursor: pointer;">
-                        </div>
-                        <input type="hidden" name="profile_image" id="profileImageUrl" value="<?php echo htmlspecialchars($about['profile_image']); ?>">
-                        <div id="profileImageLoader" style="display: none; margin-top: 0.5rem;">
-                            <i class="fas fa-spinner fa-spin"></i> Processing image...
-                        </div>
-                        <div id="profileImagePreview" style="margin-top: 1rem;">
-                            <?php if (!empty($about['profile_image'])): ?>
-                                <img src="<?php echo htmlspecialchars($about['profile_image']); ?>" alt="Profile Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;">
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
+                <label>Profile Image URL</label>
+                <input type="text" name="profile_image" value="<?php echo htmlspecialchars($edit_data['profile_image'] ?? ''); ?>" placeholder="Enter image URL">
             </div>
-
             <div class="form-group">
-                <label>About Image</label>
-                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                    <div style="flex: 1;">
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">From URL</label>
-                            <input type="text" id="aboutImageUrlInput" placeholder="Enter image URL" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%;">
-                        </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.9rem; color: #aaa; display: block; margin-bottom: 0.5rem;">Or Upload File</label>
-                            <input type="file" id="aboutImageInput" accept="image/*" style="padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px; color: #fff; width: 100%; cursor: pointer;">
-                        </div>
-                        <input type="hidden" name="about_image" id="aboutImageUrl" value="<?php echo htmlspecialchars($about['about_image']); ?>">
-                        <div id="aboutImageLoader" style="display: none; margin-top: 0.5rem;">
-                            <i class="fas fa-spinner fa-spin"></i> Processing image...
-                        </div>
-                        <div id="aboutImagePreview" style="margin-top: 1rem;">
-                            <?php if (!empty($about['about_image'])): ?>
-                                <img src="<?php echo htmlspecialchars($about['about_image']); ?>" alt="About Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;">
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
+                <label>About Image URL</label>
+                <input type="text" name="about_image" value="<?php echo htmlspecialchars($edit_data['about_image'] ?? ''); ?>" placeholder="Enter image URL">
             </div>
-            
             <div class="form-group">
                 <label>Bio</label>
-                <textarea name="bio" rows="5" required placeholder="Write a short bio about yourself..."><?php echo htmlspecialchars($about['bio']); ?></textarea>
+                <textarea name="bio" rows="5" required placeholder="Write a short bio about yourself..."><?php echo htmlspecialchars($edit_data['bio'] ?? ''); ?></textarea>
             </div>
-            
-            <button type="submit" class="btn">Save Changes</button>
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn"><?php echo $edit_data ? 'Update About' : 'Save About'; ?></button>
+                <?php if ($edit_data): ?>
+                    <a href="about.php" class="btn btn-outline" style="text-decoration: none; padding: 0.8rem 1.5rem; border: 1px solid var(--border); border-radius: 8px; color: #fff;">Cancel</a>
+                <?php endif; ?>
+            </div>
         </form>
+
+        <h3 style="margin-top: 3rem;">Saved About Information</h3>
+        <div class="list-container" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+            <?php foreach ($abouts as $item): ?>
+                <div class="list-item glass-panel" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px;">
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <?php if (!empty($item['profile_image'])): ?>
+                            <img src="<?php echo htmlspecialchars($item['profile_image']); ?>" alt="Profile" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                        <?php endif; ?>
+                        <div>
+                            <h4 style="margin: 0;"><?php echo htmlspecialchars($item['title']); ?></h4>
+                            <p style="margin: 0.5rem 0 0 0; color: #aaa; font-size: 0.9rem;"><?php echo htmlspecialchars(substr($item['bio'], 0, 100)); ?></p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="?edit=<?php echo $item['id']; ?>" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; text-decoration: none;">Edit</a>
+                        <form method="POST" style="margin: 0; display: inline;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
+                            <button type="submit" class="btn" onclick="return confirm('Are you sure you want to delete this entry?')" style="background: rgba(255, 50, 50, 0.2); border: 1px solid rgba(255, 50, 50, 0.4); padding: 0.5rem 1rem; font-size: 0.9rem; color: #fff;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            <?php if (empty($abouts)): ?>
+                <p style="color: #aaa;">No about information saved yet.</p>
+            <?php endif; ?>
+        </div>
     </div>
 </main>
-
 <?php include 'inc/foot.php'; ?>
-
-<script>
-function setupImageUpload(inputId, urlInputId, uploaderId, previewId, urlInputFieldId) {
-    const fileInput = document.getElementById(inputId);
-    const urlInputField = document.getElementById(urlInputFieldId);
-    const loader = document.getElementById(uploaderId);
-    const preview = document.getElementById(previewId);
-    const urlInput = document.getElementById(urlInputId);
-    
-    // Handle URL input
-    urlInputField.addEventListener('blur', function() {
-        const url = this.value.trim();
-        if (url) {
-            // Update hidden input with URL
-            urlInput.value = url;
-            
-            // Show preview
-            preview.innerHTML = `<img src="${url}" alt="Image Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;" onerror="this.parentElement.innerHTML='<p style=\"color: #f44;\">Failed to load image</p>'">`;
-            
-            // Show success message
-            loader.style.display = 'block';
-            loader.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> Image URL set!';
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 2000);
-        }
-    });
-    
-    // Handle file upload
-    fileInput.addEventListener('change', async function(e) {
-        const file = this.files[0];
-        if (!file) return;
-        
-        // Show loader
-        loader.style.display = 'block';
-        
-        // Create FormData
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        try {
-            const response = await fetch('upload_image.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                // Update hidden input with URL
-                urlInput.value = result.url;
-                
-                // Clear URL input field
-                urlInputField.value = '';
-                
-                // Show preview
-                preview.innerHTML = `<img src="${result.url}" alt="Image Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px;">`;
-                
-                // Show success message
-                loader.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i> Upload successful!';
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                }, 2000);
-            } else {
-                throw new Error(result.error || 'Upload failed');
-            }
-        } catch (error) {
-            loader.innerHTML = '<i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> ' + error.message;
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 3000);
-        }
-    });
-}
-
-// Initialize uploads
-document.addEventListener('DOMContentLoaded', function() {
-    setupImageUpload('profileImageInput', 'profileImageUrl', 'profileImageLoader', 'profileImagePreview', 'profileImageUrlInput');
-    setupImageUpload('aboutImageInput', 'aboutImageUrl', 'aboutImageLoader', 'aboutImagePreview', 'aboutImageUrlInput');
-});
-</script>

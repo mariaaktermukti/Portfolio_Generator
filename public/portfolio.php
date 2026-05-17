@@ -1,5 +1,14 @@
-<?php
+﻿<?php
 require_once '../config/db.php';
+
+// Helper function to convert Google Drive viewing links to direct image links
+function getDirectImageUrl($url) {
+    if (empty($url)) return '';
+    if (preg_match('/drive\.google\.com\/file\/d\/([^\/]+)/', $url, $matches)) {
+        return 'https://drive.google.com/uc?export=view&id=' . $matches[1];
+    }
+    return $url;
+}
 
 // Add contact_image column if it doesn't exist
 try {
@@ -338,7 +347,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                             <span><?php echo htmlspecialchars($profile['address']); ?></span>
                         </div>
                     <?php endif; ?>
-                    <span style="font-size: 1rem; color: var(--text-muted);">•</span>
+                    <span style="font-size: 1rem; color: var(--text-muted);">â€¢</span>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <span style="color: #fbbf24;"><i class="fas fa-star"></i></span>
                         <span style="color: var(--text-muted);"><?php echo $avg_rating; ?>/5 <span style="color: #888; font-size: 0.9rem;">rating</span></span>
@@ -356,7 +365,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                         <div style="position: absolute; inset: -10px; background: radial-gradient(circle, rgba(59, 130, 246, 0.6), transparent); border-radius: 50%; opacity: 0.4; animation: expandPulse 4s ease-in-out infinite;"></div>
                         <!-- Inner rotating light -->
                         <div style="position: absolute; inset: -5px; background: linear-gradient(135deg, var(--accent), #8b5cf6); border-radius: 50%; opacity: 0.3; animation: rotateBg 8s linear infinite;"></div>
-                        <img src="<?php echo htmlspecialchars($profile['profile_image']); ?>" alt="Profile" style="width: 100%; max-width: 320px; aspect-ratio: 1; border-radius: 50%; object-fit: cover; border: 6px solid var(--accent); box-shadow: 0 0 50px rgba(59, 130, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.3), inset 0 0 30px rgba(59, 130, 246, 0.2); position: relative; z-index: 1;">
+                        <img src="<?php echo htmlspecialchars(getDirectImageUrl($profile['profile_image'])); ?>" alt="Profile" style="width: 100%; max-width: 320px; aspect-ratio: 1; border-radius: 50%; object-fit: cover; border: 6px solid var(--accent); box-shadow: 0 0 50px rgba(59, 130, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.3), inset 0 0 30px rgba(59, 130, 246, 0.2); position: relative; z-index: 1;">
                     </div>
                 <?php else: ?>
                     <div style="position: relative; width: 100%; max-width: 350px;">
@@ -504,11 +513,11 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             <!-- Left Content - Animated Image -->
             <div style="display: flex; align-items: center; justify-content: center;">
                 <?php 
-                $display_image = !empty($profile['about_image']) ? $profile['about_image'] : $profile['profile_image'];
+                $display_image = !empty($profile['about_image']) ? getDirectImageUrl($profile['about_image']) : getDirectImageUrl($profile['profile_image']);
                 if ($display_image): 
                 ?>
                     <div style="position: relative; width: 100%; max-width: 280px; animation: floatImage 4s ease-in-out infinite;">
-                        <img src="<?php echo htmlspecialchars($display_image); ?>" alt="About Me" style="width: 100%; border-radius: 20px; object-fit: cover;">
+                        <img src="<?php echo htmlspecialchars(getDirectImageUrl($display_image)); ?>" alt="About Me" style="width: 100%; border-radius: 20px; object-fit: cover;">
                     </div>
                 <?php else: ?>
                     <div style="position: relative; width: 100%; max-width: 280px; aspect-ratio: 1; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 5rem; color: var(--text-muted); animation: floatImage 4s ease-in-out infinite;">
@@ -638,7 +647,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                             <div id="starRating" style="display: flex; gap: 0.5rem;">
                                 <?php for ($i = 1; $i <= 5; $i++): ?>
                                     <button type="button" class="star-btn" data-rating="<?php echo $i; ?>" style="font-size: 2.5rem; color: rgba(79, 70, 229, 0.3); cursor: pointer; background: none; border: none; transition: all 0.2s ease; padding: 0.25rem;" onmouseover="this.style.color='#f59e0b'; this.style.transform='scale(1.15)';" onmouseout="this.style.transform='scale(1)';">
-                                        ★
+                                        â˜…
                                     </button>
                                 <?php endfor; ?>
                             </div>
@@ -666,7 +675,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                     const ratingText = document.getElementById('ratingText');
                     const starBtns = document.querySelectorAll('.star-btn');
                     
-                    const ratingLabels = ['', 'Poor 😞', 'Average 😐', 'Good 😊', 'Excellent 😍', 'Outstanding ⭐'];
+                    const ratingLabels = ['', 'Poor ðŸ˜ž', 'Average ðŸ˜', 'Good ðŸ˜Š', 'Excellent ðŸ˜', 'Outstanding â­'];
                     const ratingColors = ['', '#ef4444', '#f59e0b', '#10b981', '#0ea5e9', '#6366f1'];
                     
                     starBtns.forEach(btn => {
@@ -732,7 +741,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 <!-- Contact Image -->
                 <?php if (!empty($profile['contact_image'])): ?>
                     <div style="width: 100%; border-radius: 12px; overflow: hidden; ">
-                        <img src="<?php echo htmlspecialchars($profile['contact_image']); ?>" alt="Contact" style="width: 100%; height: 260px; object-fit: cover; display: block; border-radius: 12px; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';">
+                        <img src="<?php echo htmlspecialchars(getDirectImageUrl($profile['contact_image'])); ?>" alt="Contact" style="width: 100%; height: 260px; object-fit: cover; display: block; border-radius: 12px; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';">
                     </div>
                 <?php endif; ?>
                 
@@ -801,7 +810,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                                 <div>
                                     <h3 style="color: #fff; margin: 0 0 0.5rem 0; font-size: 1.2rem;"><?php echo htmlspecialchars($r['visitor_name']); ?></h3>
                                     <span style="color: #fbbf24; font-size: 1.1rem;">
-                                        <?php echo str_repeat('★', $r['rating']) . str_repeat('☆', 5 - $r['rating']); ?>
+                                        <?php echo str_repeat('â˜…', $r['rating']) . str_repeat('â˜†', 5 - $r['rating']); ?>
                                     </span>
                                 </div>
                                 <span style="color: var(--text-muted); font-size: 0.9rem;">
@@ -944,3 +953,4 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
     </script>
 </body>
 </html>
+
