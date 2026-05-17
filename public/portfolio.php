@@ -1,12 +1,30 @@
-﻿<?php
+<?php
 require_once '../config/db.php';
 
-// Helper function to convert Google Drive viewing links to direct image links
 function getDirectImageUrl($url) {
     if (empty($url)) return '';
-    if (preg_match('/drive\.google\.com\/file\/d\/([^\/]+)/', $url, $matches)) {
-        return 'https://drive.google.com/uc?export=view&id=' . $matches[1];
+    
+    // 1. Google Drive Links -> Convert to direct lh3.googleusercontent image
+    if (preg_match('/drive\.google\.com\/file\/d\/([^\/]+)/', $url, $matches) ||
+        preg_match('/drive\.google\.com\/open\?id=([^&]+)/', $url, $matches) ||
+        preg_match('/drive\.google\.com\/uc\?.*id=([^&]+)/', $url, $matches)) {
+        return 'https://lh3.googleusercontent.com/d/' . $matches[1];
     }
+    
+    // 2. Already an Image URL -> return as is
+    if (preg_match('/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i', $url)) {
+        return $url;
+    }
+    
+    // 3. Webpage links (HackerRank, Coursera, Google, Credly certificates/profiles)
+    // We use a free public OpenGraph Image API to fetch the image preview of the URL!
+    if (strpos($url, 'hackerrank.com') !== false || 
+        strpos($url, 'google.com') !== false || 
+        strpos($url, 'coursera.org') !== false || 
+        strpos($url, 'credly.com') !== false) {
+        return 'https://v1.opengraph.11ty.dev/' . urlencode($url) . '/large/';
+    }
+
     return $url;
 }
 
@@ -517,7 +535,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 if ($display_image): 
                 ?>
                     <div style="position: relative; width: 100%; max-width: 280px; animation: floatImage 4s ease-in-out infinite;">
-                        <img src="<?php echo htmlspecialchars(getDirectImageUrl($display_image)); ?>" alt="About Me" style="width: 100%; border-radius: 20px; object-fit: cover;">
+                        <img src="<?php echo htmlspecialchars($display_image); ?>" alt="About Me" style="width: 100%; border-radius: 20px; object-fit: cover;">
                     </div>
                 <?php else: ?>
                     <div style="position: relative; width: 100%; max-width: 280px; aspect-ratio: 1; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 5rem; color: var(--text-muted); animation: floatImage 4s ease-in-out infinite;">
@@ -598,6 +616,14 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                         <h3 style="color: #fff; margin-bottom: 0.5rem;"><?php echo htmlspecialchars($a['title']); ?></h3>
                         <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;"><i class="fas fa-calendar-check"></i> <?php echo $a['date_earned']; ?></div>
                         <p><?php echo htmlspecialchars($a['description']); ?></p>
+                        <?php if (!empty($a['url'])): ?>
+                            <div style="margin: 1rem 0; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; min-height: 150px;">
+                                <img src="<?php echo htmlspecialchars(getDirectImageUrl($a['url'])); ?>" alt="Certificate" style="width: 100%; height: auto; max-height: 300px; object-fit: contain; display: block;" onerror="this.style.display='none';">
+                            </div>
+                            <a href="<?php echo htmlspecialchars($a['url']); ?>" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.15); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(59, 130, 246, 0.3)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(59, 130, 246, 0.15)'; this.style.transform='translateY(0)';">
+                                <i class="fas fa-external-link-alt"></i> Open Certificate Link
+                            </a>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
