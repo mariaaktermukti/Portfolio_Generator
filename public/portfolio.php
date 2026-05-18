@@ -612,7 +612,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             <h2><i class="fas fa-trophy" style="color: var(--accent);"></i> Achievements</h2>
             <div class="card-grid" style="margin-top: 1.5rem;">
                 <?php foreach ($achievements as $a): ?>
-                    <div class="card">
+                    <div class="card" style="display: flex; flex-direction: column; height: 100%;">
                         <h3 style="color: #fff; margin-bottom: 0.5rem;"><?php echo htmlspecialchars($a['title']); ?></h3>
                         <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;"><i class="fas fa-calendar-check"></i> <?php echo $a['date_earned']; ?></div>
                         
@@ -624,7 +624,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                         <?php endif; ?>
                         
                         <!-- Truncated Description -->
-                        <p style="color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; margin: 0 0 1.25rem 0; height: 3.5rem;"><?php echo htmlspecialchars($a['description']); ?></p>
+                        <p style="color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; margin: 0 0 1.25rem 0; height: 3rem; flex-grow: 1;"><?php echo htmlspecialchars($a['description']); ?></p>
                         
                         <!-- Actions -->
                         <div style="display: flex; gap: 0.75rem; margin-top: auto; flex-wrap: wrap;">
@@ -633,7 +633,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                             </button>
                             <?php if (!empty($a['certificate_url'])): ?>
                             <a href="<?php echo htmlspecialchars($a['certificate_url']); ?>" target="_blank" rel="noopener noreferrer" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.6rem 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); color: #22c55e; border: 1.5px solid rgba(34, 197, 94, 0.4); border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(34, 197, 94, 0.3)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(34, 197, 94, 0.3)';" onmouseout="this.style.background='linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                                <i class="fas fa-external-link-alt"></i> <span>Certificate</span>
+                                <i class="fas fa-external-link-alt"></i> <span>Link</span>
                             </a>
                             <?php endif; ?>
                         </div>
@@ -1026,7 +1026,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             if (achievement.certificate_url && achievement.certificate_url.trim() !== '') {
                 link.href = achievement.certificate_url;
                 link.style.display = 'inline-flex';
-                linkText.textContent = 'Open Original Certificate';
+                linkText.textContent = 'See in Original Platform';
             } else {
                 link.style.display = 'none';
             }
