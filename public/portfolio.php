@@ -315,30 +315,37 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
 
     <!-- Success Notification -->
     <?php if ($review_submitted): ?>
-        <div style="max-width: 1280px; margin: 1rem auto; padding: 0 1rem;">
-            <div
-                style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05)); border-left: 4px solid #22c55e; border-radius: 8px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; animation: slideDown 0.4s ease-out;">
-                <i class="fas fa-check-circle" style="font-size: 1.5rem; color: #22c55e;"></i>
-                <div>
-                    <h3 style="margin: 0 0 0.25rem 0; color: #22c55e; font-weight: 600;">Review Submitted!</h3>
-                    <p style="margin: 0; color: rgba(34, 197, 94, 0.8); font-size: 0.95rem;">Thank you for your review! It
-                        will appear on this portfolio after admin approval.</p>
-                </div>
+        <div id="toastNotification" style="position: fixed; top: 5rem; right: 2rem; z-index: 9999; max-width: 400px; background: rgba(34, 197, 94, 0.95); backdrop-filter: blur(10px); border-left: 4px solid #16a34a; border-radius: 8px; padding: 1.25rem 1.5rem; display: flex; align-items: flex-start; gap: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: toastSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;">
+            <i class="fas fa-check-circle" style="font-size: 1.5rem; color: #fff; margin-top: 0.1rem;"></i>
+            <div>
+                <h3 style="margin: 0 0 0.25rem 0; color: #fff; font-weight: 600; font-size: 1.1rem;">Review Submitted!</h3>
+                <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; line-height: 1.4;">Thank you for your review! It will appear on this portfolio after admin approval.</p>
             </div>
-            <style>
-                @keyframes slideDown {
-                    from {
-                        opacity: 0;
-                        transform: translateY(-10px);
-                    }
-
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-            </style>
         </div>
+        <style>
+            @keyframes toastSlideIn {
+                from { opacity: 0; transform: translateX(120%); }
+                to { opacity: 1; transform: translateX(0); }
+            }
+            @keyframes toastSlideOut {
+                from { opacity: 1; transform: translateX(0); }
+                to { opacity: 0; transform: translateX(120%); }
+            }
+        </style>
+        <script>
+            setTimeout(() => {
+                const toast = document.getElementById('toastNotification');
+                if (toast) {
+                    toast.style.animation = 'toastSlideOut 0.5s ease-in forwards';
+                    setTimeout(() => toast.remove(), 500);
+                }
+                
+                // Clean up URL without reloading the page
+                const url = new URL(window.location);
+                url.searchParams.delete('review_submitted');
+                window.history.replaceState({}, document.title, url);
+            }, 3000);
+        </script>
     <?php endif; ?>
 
     <div class="portfolio-container">
