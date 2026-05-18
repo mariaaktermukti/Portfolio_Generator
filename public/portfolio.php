@@ -973,15 +973,12 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             </button>
             
             <h2 id="achievementTitle" style="color: var(--accent); font-size: 1.8rem; margin-bottom: 1rem; margin-top: 0; padding-right: 2.5rem;"></h2>
-            <div id="achievementDate" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-calendar-check"></i>
-                <span id="achievementDateText"></span>
-            </div>
+          
             
             <!-- Certificate Image Display -->
             <div id="achievementCertImage" style="display: none; margin-bottom: 1.5rem; width: 100%; padding: 1rem; background: rgba(59, 130, 246, 0.08); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 1rem 0; font-weight: 600;">Certificate Preview:</p>
-                <img id="achievementCertImg" src="" alt="Certificate" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(0, 0, 0, 0.2); display: block;" onerror="this.parentElement.innerHTML='<p style=\"color: var(--text-muted); text-align: center; padding: 2rem;\"></p>
+              
+                <img id="achievementCertImg" src="" alt="Certificate" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(0, 0, 0, 0.2); display: block;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)';" >
             </div>
             
             <div id="achievementDescription" style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.8; margin-bottom: 1.5rem;"></div>
@@ -1002,7 +999,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
         function openAchievementModal(achievement) {
             const modal = document.getElementById('achievementModal');
             const title = document.getElementById('achievementTitle');
-            const dateText = document.getElementById('achievementDateText');
+         
             const description = document.getElementById('achievementDescription');
             const certImageDiv = document.getElementById('achievementCertImage');
             const certImg = document.getElementById('achievementCertImg');
@@ -1010,7 +1007,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             const linkText = document.getElementById('achievementLinkText');
             
             title.textContent = achievement.title;
-            dateText.textContent = achievement.date_earned;
+       
             description.textContent = achievement.description;
             
             // Display certificate image if available
