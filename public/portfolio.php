@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once '../config/db.php';
 
 function getDirectImageUrl($url) {
@@ -365,7 +365,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                             <span><?php echo htmlspecialchars($profile['address']); ?></span>
                         </div>
                     <?php endif; ?>
-                    <span style="font-size: 1rem; color: var(--text-muted);">â€¢</span>
+                  
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <span style="color: #fbbf24;"><i class="fas fa-star"></i></span>
                         <span style="color: var(--text-muted);"><?php echo $avg_rating; ?>/5 <span style="color: #888; font-size: 0.9rem;">rating</span></span>
@@ -615,15 +615,28 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                     <div class="card">
                         <h3 style="color: #fff; margin-bottom: 0.5rem;"><?php echo htmlspecialchars($a['title']); ?></h3>
                         <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;"><i class="fas fa-calendar-check"></i> <?php echo $a['date_earned']; ?></div>
-                        <p><?php echo htmlspecialchars($a['description']); ?></p>
-                        <?php if (!empty($a['url'])): ?>
-                            <div style="margin: 1rem 0; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; min-height: 150px;">
-                                <img src="<?php echo htmlspecialchars(getDirectImageUrl($a['url'])); ?>" alt="Certificate" style="width: 100%; height: auto; max-height: 300px; object-fit: contain; display: block;" onerror="this.style.display='none';">
-                            </div>
-                            <a href="<?php echo htmlspecialchars($a['url']); ?>" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.15); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(59, 130, 246, 0.3)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(59, 130, 246, 0.15)'; this.style.transform='translateY(0)';">
-                                <i class="fas fa-external-link-alt"></i> Open Certificate Link
-                            </a>
+                        
+                        <!-- Certificate Image Thumbnail -->
+                        <?php if (!empty($a['certificate_image_url'])): ?>
+                        <div style="margin-bottom: 1rem; width: 100%; border-radius: 8px; overflow: hidden; background: rgba(59, 130, 246, 0.1);">
+                            <img src="<?php echo htmlspecialchars($a['certificate_image_url']); ?>" alt="Certificate" style="width: 100%; height: 150px; object-fit: cover; display: block; border-radius: 8px; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';">
+                        </div>
                         <?php endif; ?>
+                        
+                        <!-- Truncated Description -->
+                        <p style="color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; margin: 0 0 1.25rem 0; height: 3.5rem;"><?php echo htmlspecialchars($a['description']); ?></p>
+                        
+                        <!-- Actions -->
+                        <div style="display: flex; gap: 0.75rem; margin-top: auto; flex-wrap: wrap;">
+                            <button onclick="openAchievementModal(<?php echo htmlspecialchars(json_encode($a)); ?>)" style="flex: 1; display: inline-flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(139, 92, 246, 0.25)'; this.style.borderColor='rgba(139, 92, 246, 0.5)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(139, 92, 246, 0.15)'; this.style.borderColor='rgba(139, 92, 246, 0.3)'; this.style.transform='translateY(0)';">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                            <?php if (!empty($a['certificate_url'])): ?>
+                            <a href="<?php echo htmlspecialchars($a['certificate_url']); ?>" target="_blank" rel="noopener noreferrer" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.6rem 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); color: #22c55e; border: 1.5px solid rgba(34, 197, 94, 0.4); border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(34, 197, 94, 0.3)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(34, 197, 94, 0.3)';" onmouseout="this.style.background='linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                <i class="fas fa-external-link-alt"></i> <span>Certificate</span>
+                            </a>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -669,15 +682,15 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                     <!-- Star Rating -->
                     <div class="form-group">
                         <label style="color: var(--text-secondary); font-weight: 600; margin-bottom: 1rem; display: block;">Rate this Portfolio</label>
-                        <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem;">
-                            <div id="starRating" style="display: flex; gap: 0.5rem;">
+                        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+                            <div id="starRating" style="display: flex; gap: 0.75rem; align-items: center;">
                                 <?php for ($i = 1; $i <= 5; $i++): ?>
-                                    <button type="button" class="star-btn" data-rating="<?php echo $i; ?>" style="font-size: 2.5rem; color: rgba(79, 70, 229, 0.3); cursor: pointer; background: none; border: none; transition: all 0.2s ease; padding: 0.25rem;" onmouseover="this.style.color='#f59e0b'; this.style.transform='scale(1.15)';" onmouseout="this.style.transform='scale(1)';">
-                                        â˜…
+                                    <button type="button" class="star-btn" data-rating="<?php echo $i; ?>" style="font-size: 2rem; color: rgba(79, 70, 229, 0.4); cursor: pointer; background: none; border: none; transition: all 0.3s ease; padding: 0.5rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;" onmouseover="this.style.color='#fbbf24'; this.style.transform='scale(1.2)';" onmouseout="this.style.color=document.getElementById('ratingInput').value ? '#fbbf24' : 'rgba(79, 70, 229, 0.4)'; this.style.transform='scale(1)';">
+                                        <i class="fas fa-star" style="display: block;"></i>
                                     </button>
                                 <?php endfor; ?>
                             </div>
-                            <span id="ratingText" style="color: var(--text-muted); font-weight: 600; margin-left: 1rem; min-width: 80px;">Select rating</span>
+                            <span id="ratingText" style="color: var(--text-muted); font-weight: 600; min-width: 120px; font-size: 0.95rem;">Select rating</span>
                         </div>
                     </div>
                     
@@ -701,10 +714,13 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                     const ratingText = document.getElementById('ratingText');
                     const starBtns = document.querySelectorAll('.star-btn');
                     
-                    const ratingLabels = ['', 'Poor ðŸ˜ž', 'Average ðŸ˜', 'Good ðŸ˜Š', 'Excellent ðŸ˜', 'Outstanding â­'];
-                    const ratingColors = ['', '#ef4444', '#f59e0b', '#10b981', '#0ea5e9', '#6366f1'];
+                    const ratingLabels = ['', 'Poor', 'Average', 'Good', 'Excellent', 'Outstanding'];
+                    const ratingColors = ['rgba(79, 70, 229, 0.4)', '#ef4444', '#f59e0b', '#10b981', '#0ea5e9', '#6366f1'];
                     
+                    // Initialize stars with proper styling
                     starBtns.forEach(btn => {
+                        btn.style.color = 'rgba(79, 70, 229, 0.4)';
+                        
                         btn.addEventListener('click', function(e) {
                             e.preventDefault();
                             const rating = this.dataset.rating;
@@ -715,7 +731,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                                 if (b.dataset.rating <= rating) {
                                     b.style.color = ratingColors[rating];
                                 } else {
-                                    b.style.color = 'rgba(79, 70, 229, 0.3)';
+                                    b.style.color = 'rgba(79, 70, 229, 0.4)';
                                 }
                             });
                             
@@ -730,7 +746,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                                 if (b.dataset.rating <= hoverRating) {
                                     b.style.color = ratingColors[hoverRating];
                                 } else {
-                                    b.style.color = 'rgba(79, 70, 229, 0.3)';
+                                    b.style.color = 'rgba(79, 70, 229, 0.4)';
                                 }
                             });
                         });
@@ -738,10 +754,10 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                         btn.addEventListener('mouseout', function() {
                             const selectedRating = ratingInput.value || 0;
                             starBtns.forEach(b => {
-                                if (b.dataset.rating <= selectedRating) {
+                                if (selectedRating > 0 && b.dataset.rating <= selectedRating) {
                                     b.style.color = ratingColors[selectedRating];
                                 } else {
-                                    b.style.color = 'rgba(79, 70, 229, 0.3)';
+                                    b.style.color = 'rgba(79, 70, 229, 0.4)';
                                 }
                             });
                         });
@@ -751,10 +767,10 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                         const count = textarea.value.length;
                         document.getElementById('charCount').textContent = count + '/500';
                         
-                        if (count > 400) {
-                            document.getElementById('charCount').style.color = '#f59e0b';
-                        } else if (count > 450) {
+                        if (count > 450) {
                             document.getElementById('charCount').style.color = '#ef4444';
+                        } else if (count > 400) {
+                            document.getElementById('charCount').style.color = '#f59e0b';
                         } else {
                             document.getElementById('charCount').style.color = 'var(--text-muted)';
                         }
@@ -836,7 +852,14 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                                 <div>
                                     <h3 style="color: #fff; margin: 0 0 0.5rem 0; font-size: 1.2rem;"><?php echo htmlspecialchars($r['visitor_name']); ?></h3>
                                     <span style="color: #fbbf24; font-size: 1.1rem;">
-                                        <?php echo str_repeat('â˜…', $r['rating']) . str_repeat('â˜†', 5 - $r['rating']); ?>
+                                        <?php 
+                                            for ($i = 0; $i < $r['rating']; $i++) {
+                                                echo '<i class="fas fa-star" style="display: inline-block; margin-right: 0.2rem;"></i>';
+                                            }
+                                            for ($i = $r['rating']; $i < 5; $i++) {
+                                                echo '<i class="far fa-star" style="display: inline-block; margin-right: 0.2rem; opacity: 0.4;"></i>';
+                                            }
+                                        ?>
                                     </span>
                                 </div>
                                 <span style="color: var(--text-muted); font-size: 0.9rem;">
@@ -932,6 +955,109 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
         
     </div>
 
+    <!-- Achievement Details Modal -->
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+    <div id="achievementModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.3s ease;">
+        <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px; padding: 2.5rem; backdrop-filter: blur(10px); max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative;">
+            <button onclick="closeAchievementModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; width: 36px; height: 36px; border-radius: 50%; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--accent); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(59, 130, 246, 0.3)'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.transform='scale(1)';">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <h2 id="achievementTitle" style="color: var(--accent); font-size: 1.8rem; margin-bottom: 1rem; margin-top: 0; padding-right: 2.5rem;"></h2>
+            <div id="achievementDate" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-calendar-check"></i>
+                <span id="achievementDateText"></span>
+            </div>
+            
+            <!-- Certificate Image Display -->
+            <div id="achievementCertImage" style="display: none; margin-bottom: 1.5rem; width: 100%; padding: 1rem; background: rgba(59, 130, 246, 0.08); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 1rem 0; font-weight: 600;">Certificate Preview:</p>
+                <img id="achievementCertImg" src="" alt="Certificate" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(0, 0, 0, 0.2); display: block;" onerror="this.parentElement.innerHTML='<p style=\"color: var(--text-muted); text-align: center; padding: 2rem;\"></p>
+            </div>
+            
+            <div id="achievementDescription" style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.8; margin-bottom: 1.5rem;"></div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                <a id="achievementLink" href="" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.5rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); color: #22c55e; border: 1.5px solid rgba(34, 197, 94, 0.4); border-radius: 8px; font-size: 0.95rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(34, 197, 94, 0.3)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(34, 197, 94, 0.3)';" onmouseout="this.style.background='linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                    <i class="fas fa-external-link-alt"></i> <span id="achievementLinkText">Certificate</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        
+        function openAchievementModal(achievement) {
+            const modal = document.getElementById('achievementModal');
+            const title = document.getElementById('achievementTitle');
+            const dateText = document.getElementById('achievementDateText');
+            const description = document.getElementById('achievementDescription');
+            const certImageDiv = document.getElementById('achievementCertImage');
+            const certImg = document.getElementById('achievementCertImg');
+            const link = document.getElementById('achievementLink');
+            const linkText = document.getElementById('achievementLinkText');
+            
+            title.textContent = achievement.title;
+            dateText.textContent = achievement.date_earned;
+            description.textContent = achievement.description;
+            
+            // Display certificate image if available
+            if (achievement.certificate_image_url && achievement.certificate_image_url.trim() !== '') {
+                certImageDiv.style.display = 'block';
+                certImg.src = achievement.certificate_image_url;
+                certImg.style.opacity = '1';
+            } else {
+                certImageDiv.style.display = 'none';
+            }
+            
+            // Display original certificate link if available
+            if (achievement.certificate_url && achievement.certificate_url.trim() !== '') {
+                link.href = achievement.certificate_url;
+                link.style.display = 'inline-flex';
+                linkText.textContent = 'Open Original Certificate';
+            } else {
+                link.style.display = 'none';
+            }
+            
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeAchievementModal() {
+            const modal = document.getElementById('achievementModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const achievModal = document.getElementById('achievementModal');
+            
+            if (event.target === achievModal) {
+                closeAchievementModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeAchievementModal();
+            }
+        });
+    </script>
+
     <script>
         // Navigation active state on scroll
         function updateActiveNav() {
@@ -939,13 +1065,18 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             const navLinks = document.querySelectorAll('.portfolio-nav a');
             
             let current = 'hero';
+            let minDistance = Infinity;
             
             sections.forEach(section => {
                 const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
+                const scrollPosition = window.scrollY + 100;
                 
-                if (window.scrollY >= sectionTop - 200) {
-                    current = section.getAttribute('id');
+                if (scrollPosition >= sectionTop) {
+                    const distance = scrollPosition - sectionTop;
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        current = section.getAttribute('id');
+                    }
                 }
             });
             
@@ -968,11 +1099,20 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                     top: elementPosition,
                     behavior: 'smooth'
                 });
+                
+                // Update active state immediately after scroll
+                setTimeout(() => {
+                    updateActiveNav();
+                }, 100);
             }
         }
 
-        // Update active state on scroll
-        window.addEventListener('scroll', updateActiveNav);
+        // Update active state on scroll with debouncing
+        let scrollTimeout;
+        window.addEventListener('scroll', function() {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(updateActiveNav, 50);
+        }, { passive: true });
         
         // Initial call
         updateActiveNav();
