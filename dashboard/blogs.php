@@ -16,6 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE blogs SET is_deleted = 1 WHERE id = ? AND user_id = ?");
         $stmt->execute([$id, $user_id]);
         $_SESSION['success_msg'] = "Blog post deleted.";
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'edit') {
+        $id = $_POST['id'];
+        $title = $_POST['title'] ?? '';
+        $content = $_POST['content'] ?? '';
+        $stmt = $pdo->prepare("UPDATE blogs SET title = ?, content = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$title, $content, $id, $user_id]);
+        $_SESSION['success_msg'] = "Blog post updated.";
     } else {
         $title = $_POST['title'] ?? '';
         $content = $_POST['content'] ?? '';
@@ -48,19 +55,37 @@ $blogs = $stmt->fetchAll();
             <div class="msg-success"><?php echo htmlspecialchars($success); ?></div>
         <?php endif; ?>
         
+        <?php
+        $edit_blog = null;
+        if (isset($_GET['edit'])) {
+            $stmt = $pdo->prepare("SELECT * FROM blogs WHERE id = ? AND user_id = ? AND is_deleted = 0");
+            $stmt->execute([$_GET['edit'], $user_id]);
+            $edit_blog = $stmt->fetch();
+        }
+        ?>
+
         <form method="POST">
-            <h3>Write New Blog Post</h3>
+            <?php if ($edit_blog): ?>
+                <h3>Edit Blog Post</h3>
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="id" value="<?php echo $edit_blog['id']; ?>">
+            <?php else: ?>
+                <h3>Write New Blog Post</h3>
+            <?php endif; ?>
             <div class="form-group">
                 <label>Title</label>
-                <input type="text" name="title" required placeholder="Catchy title...">
+                <input type="text" name="title" required placeholder="Catchy title..." value="<?php echo $edit_blog ? htmlspecialchars($edit_blog['title']) : ''; ?>">
             </div>
             
             <div class="form-group">
                 <label>Content</label>
-                <textarea name="content" rows="10" required placeholder="Write your content here..."></textarea>
+                <textarea name="content" rows="10" required placeholder="Write your content here..."><?php echo $edit_blog ? htmlspecialchars($edit_blog['content']) : ''; ?></textarea>
             </div>
             
-            <button type="submit" class="btn">Publish Blog Post</button>
+            <button type="submit" class="btn"><?php echo $edit_blog ? 'Update Blog Post' : 'Publish Blog Post'; ?></button>
+            <?php if ($edit_blog): ?>
+                <a href="blogs.php" class="btn" style="background: var(--text-muted); margin-top: 10px; text-align: center; display: block; text-decoration: none;">Cancel Edit</a>
+            <?php endif; ?>
         </form>
     </div>
 
@@ -75,11 +100,14 @@ $blogs = $stmt->fetchAll();
                             <i class="fas fa-clock"></i> <?php echo date('F j, Y, g:i a', strtotime($blog['created_at'])); ?>
                         </div>
                         <p style="margin-bottom: 1rem;"><?php echo nl2br(htmlspecialchars($blog['content'])); ?></p>
-                        <form method="POST">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<?php echo $blog['id']; ?>">
-                            <button type="submit" class="btn btn-danger" style="width: auto; padding: 0.3rem 0.8rem; font-size: 0.8rem;"><i class="fas fa-trash"></i> Delete Post</button>
-                        </form>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="blogs.php?edit=<?php echo $blog['id']; ?>" class="btn" style="width: auto; padding: 0.3rem 0.8rem; font-size: 0.8rem; text-decoration: none;"><i class="fas fa-edit"></i> Edit Post</a>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="<?php echo $blog['id']; ?>">
+                                <button type="submit" class="btn btn-danger" style="width: auto; padding: 0.3rem 0.8rem; font-size: 0.8rem;"><i class="fas fa-trash"></i> Delete Post</button>
+                            </form>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>

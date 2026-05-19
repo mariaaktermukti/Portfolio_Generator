@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../config/db.php';
+require_once '../config/db.php'; //database connection file include
 
 if (!isset($_SESSION['user_id']) || !$_SESSION['is_admin']) {
     header('Location: ../auth/login.php');
