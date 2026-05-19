@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 2rem;
             background: var(--bg-primary);
         }
+
         .auth-container {
             display: flex;
             max-width: 1280px;
@@ -57,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
         }
+
         .auth-image {
             flex: 1;
             background-image: url('https://static.vecteezy.com/system/resources/previews/016/143/128/non_2x/register-now-icon-in-comic-style-registration-cartoon-illustration-on-isolated-background-member-notification-splash-effect-sign-business-concept-vector.jpg');
@@ -64,9 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-position: center;
             display: none;
         }
+
         @media(min-width: 768px) {
-            .auth-image { display: block; }
+            .auth-image {
+                display: block;
+            }
         }
+
         .auth-form-wrapper {
             flex: 1;
             padding: 3rem;
@@ -76,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
+
 <body>
     <div class="auth-wrapper">
         <div class="auth-container">
@@ -87,7 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 <?php if ($success): ?>
                     <div class="msg-success" style="margin-bottom: 1rem;"><?php echo htmlspecialchars($success); ?></div>
-                    <p style="text-align: center;"><a href="login.php" class="btn" style="margin-top: 1rem; display: inline-block;">Go to Login</a></p>
+                    <p style="text-align: center;"><a href="login.php" class="btn"
+                            style="margin-top: 1rem; display: inline-block;">Go to Login</a></p>
                 <?php else: ?>
                     <form method="POST">
                         <div class="form-group" style="margin-bottom: 1rem;">
@@ -101,14 +110,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-group" style="margin-bottom: 1.5rem;">
                             <label>Password</label>
                             <div style="position: relative;">
-                                <input type="password" name="password" id="password" required placeholder="Create a password" style="padding-right: 40px;">
-                                <i class="fas fa-eye toggle-password" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);" onclick="togglePassword('password', this)"></i>
+                                <input type="password" name="password" id="password" required
+                                    placeholder="Create a password" style="padding-right: 40px;">
+                                <i class="fas fa-eye toggle-password"
+                                    style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"
+                                    onclick="togglePassword('password', this)"></i>
                             </div>
                         </div>
                         <button type="submit" class="btn" style="width: 100%;">Register</button>
                     </form>
                     <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); text-align: center;">
-                        Already have an account? <a href="login.php" style="color: var(--accent); text-decoration: none; font-weight: 600;">Login here</a>
+                        Already have an account? <a href="login.php"
+                            style="color: var(--accent); text-decoration: none; font-weight: 600;">Login here</a>
                     </p>
                 <?php endif; ?>
             </div>
@@ -131,4 +144,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 </body>
+
 </html>

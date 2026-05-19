@@ -14,7 +14,8 @@ $edit_id = null;
 
 try {
     $pdo->exec("ALTER TABLE about ADD COLUMN about_image VARCHAR(255) DEFAULT ''");
-} catch (PDOException $e) {}
+} catch (PDOException $e) {
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'delete') {
@@ -74,24 +75,31 @@ $abouts = $stmt->fetchAll();
             <?php endif; ?>
             <div class="form-group">
                 <label>Professional Title</label>
-                <input type="text" name="title" value="<?php echo htmlspecialchars($edit_data['title'] ?? ''); ?>" required placeholder="e.g. Full Stack Developer">
+                <input type="text" name="title" value="<?php echo htmlspecialchars($edit_data['title'] ?? ''); ?>"
+                    required placeholder="e.g. Full Stack Developer">
             </div>
             <div class="form-group">
                 <label>Profile Image URL</label>
-                <input type="text" name="profile_image" value="<?php echo htmlspecialchars($edit_data['profile_image'] ?? ''); ?>" placeholder="Enter image URL">
+                <input type="text" name="profile_image"
+                    value="<?php echo htmlspecialchars($edit_data['profile_image'] ?? ''); ?>"
+                    placeholder="Enter image URL">
             </div>
             <div class="form-group">
                 <label>About Image URL</label>
-                <input type="text" name="about_image" value="<?php echo htmlspecialchars($edit_data['about_image'] ?? ''); ?>" placeholder="Enter image URL">
+                <input type="text" name="about_image"
+                    value="<?php echo htmlspecialchars($edit_data['about_image'] ?? ''); ?>"
+                    placeholder="Enter image URL">
             </div>
             <div class="form-group">
                 <label>Bio</label>
-                <textarea name="bio" rows="5" required placeholder="Write a short bio about yourself..."><?php echo htmlspecialchars($edit_data['bio'] ?? ''); ?></textarea>
+                <textarea name="bio" rows="5" required
+                    placeholder="Write a short bio about yourself..."><?php echo htmlspecialchars($edit_data['bio'] ?? ''); ?></textarea>
             </div>
             <div style="display: flex; gap: 1rem;">
                 <button type="submit" class="btn"><?php echo $edit_data ? 'Update About' : 'Save About'; ?></button>
                 <?php if ($edit_data): ?>
-                    <a href="about.php" class="btn btn-outline" style="text-decoration: none; padding: 0.8rem 1.5rem; border: 1px solid var(--border); border-radius: 8px; color: #fff;">Cancel</a>
+                    <a href="about.php" class="btn btn-outline"
+                        style="text-decoration: none; padding: 0.8rem 1.5rem; border: 1px solid var(--border); border-radius: 8px; color: #fff;">Cancel</a>
                 <?php endif; ?>
             </div>
         </form>
@@ -99,22 +107,28 @@ $abouts = $stmt->fetchAll();
         <h3 style="margin-top: 3rem;">Saved About Information</h3>
         <div class="list-container" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
             <?php foreach ($abouts as $item): ?>
-                <div class="list-item glass-panel" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px;">
+                <div class="list-item glass-panel"
+                    style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px;">
                     <div style="display: flex; gap: 1rem; align-items: center;">
                         <?php if (!empty($item['profile_image'])): ?>
-                            <img src="<?php echo htmlspecialchars($item['profile_image']); ?>" alt="Profile" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
+                            <img src="<?php echo htmlspecialchars($item['profile_image']); ?>" alt="Profile"
+                                style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
                         <?php endif; ?>
                         <div>
                             <h4 style="margin: 0;"><?php echo htmlspecialchars($item['title']); ?></h4>
-                            <p style="margin: 0.5rem 0 0 0; color: #aaa; font-size: 0.9rem;"><?php echo htmlspecialchars(substr($item['bio'], 0, 100)); ?></p>
+                            <p style="margin: 0.5rem 0 0 0; color: #aaa; font-size: 0.9rem;">
+                                <?php echo htmlspecialchars(substr($item['bio'], 0, 100)); ?></p>
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
-                        <a href="?edit=<?php echo $item['id']; ?>" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; text-decoration: none;">Edit</a>
+                        <a href="?edit=<?php echo $item['id']; ?>" class="btn"
+                            style="padding: 0.5rem 1rem; font-size: 0.9rem; text-decoration: none;">Edit</a>
                         <form method="POST" style="margin: 0; display: inline;">
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
-                            <button type="submit" class="btn" onclick="return confirm('Are you sure you want to delete this entry?')" style="background: rgba(255, 50, 50, 0.2); border: 1px solid rgba(255, 50, 50, 0.4); padding: 0.5rem 1rem; font-size: 0.9rem; color: #fff;">Delete</button>
+                            <button type="submit" class="btn"
+                                onclick="return confirm('Are you sure you want to delete this entry?')"
+                                style="background: rgba(255, 50, 50, 0.2); border: 1px solid rgba(255, 50, 50, 0.4); padding: 0.5rem 1rem; font-size: 0.9rem; color: #fff;">Delete</button>
                         </form>
                     </div>
                 </div>

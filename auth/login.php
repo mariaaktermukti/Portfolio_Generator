@@ -61,12 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: flex;
             max-width: 1280px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--panel-bg);
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            box-shadow: var(--panel-shadow);
+            border: 1px solid var(--border);
         }
         .auth-image {
             flex: 1;
@@ -92,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="auth-container">
             <div class="auth-image"></div>
             <div class="auth-form-wrapper">
-                <h2 style="margin-bottom: 2rem; color: #fff;">Welcome Back</h2>
+                <h2 style="margin-bottom: 2rem; color: var(--text-main);">Welcome Back</h2>
                 <?php if ($error): ?>
                     <div class="msg-error" style="margin-bottom: 1rem;"><?php echo htmlspecialchars($error); ?></div>
                 <?php endif; ?>
