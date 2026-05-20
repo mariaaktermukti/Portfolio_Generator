@@ -9,6 +9,12 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $success = '';
+$error = '';
+
+if (isset($_SESSION['error_msg'])) {
+    $error = $_SESSION['error_msg'];
+    unset($_SESSION['error_msg']);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'delete') {
@@ -22,6 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $start_date = $_POST['start_date'] ?? null;
         $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
         $description = $_POST['description'] ?? '';
+
+        if ($start_date && $end_date && $end_date < $start_date) {
+            $_SESSION['error_msg'] = "End date cannot be earlier than start date.";
+            header('Location: work.php');
+            exit;
+        }
 
         $stmt = $pdo->prepare("INSERT INTO work_experience (user_id, job_title, company, start_date, end_date, description) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->execute([$user_id, $job_title, $company, $start_date, $end_date, $description]);
@@ -50,6 +62,9 @@ $works = $stmt->fetchAll();
         <?php if ($success): ?>
             <div class="msg-success"><?php echo htmlspecialchars($success); ?></div>
         <?php endif; ?>
+        <?php if ($error): ?>
+            <div class="msg-error" style="color: #ff4d4d; background: rgba(255, 77, 77, 0.1); padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid rgba(255, 77, 77, 0.3);"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
         
         <form method="POST">
             <h3>Add Work Experience</h3>
@@ -66,11 +81,11 @@ $works = $stmt->fetchAll();
             <div class="form-group" style="display: flex; gap: 1rem;">
                 <div style="flex: 1;">
                     <label>Start Date</label>
-                    <input type="date" name="start_date" required>
+                    <input type="text" class="date-picker" name="start_date" required placeholder="YYYY-MM-DD">
                 </div>
                 <div style="flex: 1;">
                     <label>End Date</label>
-                    <input type="date" name="end_date">
+                    <input type="text" class="date-picker" name="end_date" placeholder="YYYY-MM-DD">
                     <small style="color: var(--text-muted);">Leave empty if currently working here</small>
                 </div>
             </div>
@@ -108,6 +123,82 @@ $works = $stmt->fetchAll();
             <p style="color: var(--text-muted);">No work experience records found.</p>
         <?php endif; ?>
     </div>
+    <!-- Add modern datepicker library -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <style>
+        /* Custom calendar theme to match the modern project theme */
+        .flatpickr-calendar.dark {
+            background: var(--bg-secondary);
+            box-shadow: var(--glass-shadow);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+        }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonthDay, .flatpickr-day.startRange.prevMonthDay, .flatpickr-day.endRange.prevMonthDay, .flatpickr-day.selected.nextMonthDay, .flatpickr-day.startRange.nextMonthDay, .flatpickr-day.endRange.nextMonthDay {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .flatpickr-day:hover, .flatpickr-day.prevMonthDay:hover, .flatpickr-day.nextMonthDay:hover, .flatpickr-day:focus, .flatpickr-day.prevMonthDay:focus, .flatpickr-day.nextMonthDay:focus {
+            background: var(--bg-tertiary);
+            border-color: var(--border);
+        }
+        .flatpickr-months .flatpickr-month {
+            background: transparent;
+            color: var(--text-main);
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            background: var(--bg-secondary);
+            color: var(--text-main);
+            outline: none;
+        }
+        .flatpickr-weekdays {
+            background: transparent;
+        }
+        span.flatpickr-weekday {
+            color: var(--text-muted);
+        }
+        input.date-picker {
+            cursor: pointer;
+            background-color: var(--glass-bg); /* Match existing inputs */
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize End Date internally first so we can reference it
+            const endDateInput = document.querySelector('input[name="end_date"]');
+            const endDatePicker = flatpickr(endDateInput, {
+                theme: "dark",
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+
+            // Initialize Start Date and bind validation dynamically
+            const startDateInput = document.querySelector('input[name="start_date"]');
+            const startDatePicker = flatpickr(startDateInput, {
+                theme: "dark",
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length > 0) {
+                        endDatePicker.set("minDate", selectedDates[0]);
+                        // If current end date is earlier, clear it
+                        if (endDatePicker.selectedDates.length > 0 && endDatePicker.selectedDates[0] < selectedDates[0]) {
+                            endDatePicker.clear();
+                        }
+                    } else {
+                        endDatePicker.set("minDate", null);
+                    }
+                }
+            });
+
+            // On load, apply initial min date if start date exists
+            if (startDateInput.value) {
+                endDatePicker.set("minDate", startDateInput.value);
+            }
+        });
+    </script>
 </main>
 
 <?php include 'inc/foot.php'; ?>
