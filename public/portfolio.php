@@ -48,7 +48,7 @@ try {
     // Column already exists
 }
 
-$username = $_GET['user'] ?? '';
+$username = isset($_GET['user']) ? $_GET['user'] : '';
 $review_submitted = isset($_GET['review_submitted']) && $_GET['review_submitted'] === '1';
 
 if (!$username) {
@@ -95,6 +95,10 @@ $work = $stmt_work->fetchAll();
 $stmt_ach = $pdo->prepare("SELECT a.* FROM achievements a JOIN users u ON a.user_id = u.id WHERE u.id = ? AND a.is_deleted = 0 ORDER BY a.date_earned DESC");
 $stmt_ach->execute([$user_id]);
 $achievements = $stmt_ach->fetchAll();
+
+$stmt_proj = $pdo->prepare("SELECT p.* FROM projects p JOIN users u ON p.user_id = u.id WHERE u.id = ? AND p.is_deleted = 0 ORDER BY p.created_at DESC");
+$stmt_proj->execute([$user_id]);
+$projects = $stmt_proj->fetchAll();
 
 $stmt_blogs = $pdo->prepare("SELECT b.* FROM blogs b JOIN users u ON b.user_id = u.id WHERE u.id = ? AND b.is_deleted = 0 ORDER BY b.created_at DESC");
 $stmt_blogs->execute([$user_id]);
@@ -297,6 +301,9 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             <?php if ($work): ?>
                 <li><a href="#work" onclick="scrollToSection('work')"><i class="fas fa-briefcase"></i> Work</a></li>
             <?php endif; ?>
+            <?php if ($projects): ?>
+                <li><a href="#projects" onclick="scrollToSection('projects')"><i class="fas fa-project-diagram"></i> Projects</a></li>
+            <?php endif; ?>
             <?php if ($education): ?>
                 <li><a href="#education" onclick="scrollToSection('education')"><i class="fas fa-graduation-cap"></i>
                         Education</a></li><?php endif; ?>
@@ -364,7 +371,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                             style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"><?php echo htmlspecialchars($profile['username']); ?></span>
                     </h1>
                     <h2 style="font-size: clamp(1.2rem, 3vw, 2rem); color: var(--accent); font-weight: 500; margin: 0;">
-                        <?php echo htmlspecialchars($profile['title'] ?? 'Portfolio'); ?>
+                        <?php echo htmlspecialchars(isset($profile['title']) ? $profile['title'] : 'Portfolio'); ?>
                     </h2>
                 </div>
 
@@ -648,7 +655,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                     <i class="fas fa-user"></i> About Me
                 </h2>
                 <div style="font-size: 1.1rem; color: var(--text-muted); line-height: 1.8;">
-                    <?php echo nl2br(htmlspecialchars($profile['bio'] ?? '')); ?>
+                    <?php echo nl2br(htmlspecialchars(isset($profile['bio']) ? $profile['bio'] : '')); ?>
                 </div>
             </div>
         </section>
@@ -862,7 +869,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 // Group skills by skill_group
                 $grouped_skills = [];
                 foreach ($skills as $s) {
-                    $group = $s['skill_group'] ?? 'Other';
+                    $group = isset($s['skill_group']) ? $s['skill_group'] : 'Other';
                     if (!isset($grouped_skills[$group])) {
                         $grouped_skills[$group] = [];
                     }
@@ -1051,6 +1058,81 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                                 <?php echo $w['end_date'] ?: 'Present'; ?>
                             </div>
                             <p><?php echo htmlspecialchars($w['description']); ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php endif; ?>
+
+        <!-- Projects -->
+        <?php if ($projects): ?>
+            <section class="glass-panel" id="projects" style="animation-delay: 0.25s;">
+                <h2><i class="fas fa-project-diagram" style="color: var(--accent);"></i> Projects</h2>
+                <div class="card-grid" style="margin-top: 1.5rem;">
+                    <?php foreach ($projects as $p): ?>
+                        <div class="card" style="display: flex; flex-direction: column; height: 100%;">
+                            <!-- Project Image Thumbnail -->
+                            <?php if (!empty($p['image_url'])): ?>
+                                <div style="margin-bottom: 1rem; width: 100%; border-radius: 8px; overflow: hidden; background: rgba(59, 130, 246, 0.1);">
+                                    <img src="<?php echo htmlspecialchars($p['image_url']); ?>" alt="Project Image"
+                                        style="width: 100%; height: 180px; object-fit: cover; display: block; border-radius: 8px; transition: transform 0.3s ease;"
+                                        onmouseover="this.style.transform='scale(1.05)';"
+                                        onmouseout="this.style.transform='scale(1)';">
+                                </div>
+                            <?php endif; ?>
+
+                            <h3 style="color: #fff; margin-bottom: 0.5rem;"><?php echo htmlspecialchars($p['title']); ?></h3>
+                            
+                            <div style="margin-bottom: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                <?php 
+                                $tags = array_filter(array_map('trim', explode(',', $p['tags'])));
+                                foreach($tags as $tag): 
+                                ?>
+                                    <span style="background: rgba(59, 130, 246, 0.1); color: var(--text-muted); font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                                        <?php echo htmlspecialchars($tag); ?>
+                                    </span>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <p style="color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; margin: 0 0 1.25rem 0; flex-grow: 1;">
+                                <?php echo nl2br(htmlspecialchars($p['description'])); ?>
+                            </p>
+
+                            <!-- Actions -->
+                            <div style="display: flex; gap: 0.75rem; margin-top: auto; flex-wrap: wrap;">
+                                <button onclick="openProjectModal(<?php echo htmlspecialchars(json_encode($p)); ?>)"
+                                    style="flex: 1; display: inline-flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                                    onmouseover="this.style.background='rgba(139, 92, 246, 0.25)'; this.style.borderColor='rgba(139, 92, 246, 0.5)'; this.style.transform='translateY(-2px)';"
+                                    onmouseout="this.style.background='rgba(139, 92, 246, 0.15)'; this.style.borderColor='rgba(139, 92, 246, 0.3)'; this.style.transform='translateY(0)';">
+                                    <i class="fas fa-info-circle"></i> Details
+                                </button>
+                                <?php if (!empty($p['git_url'])): ?>
+                                    <a href="<?php echo htmlspecialchars($p['git_url']); ?>" target="_blank" rel="noopener noreferrer"
+                                        style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.6rem 1rem; background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;"
+                                        onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateY(-2px)';"
+                                        onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.transform='translateY(0)';">
+                                        <i class="fab fa-github"></i> <span>Code</span>
+                                    </a>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($p['live_demo_url'])): ?>
+                                    <a href="<?php echo htmlspecialchars($p['live_demo_url']); ?>" target="_blank" rel="noopener noreferrer"
+                                        style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.6rem 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); color: #22c55e; border: 1.5px solid rgba(34, 197, 94, 0.4); border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;"
+                                        onmouseover="this.style.background='rgba(34, 197, 94, 0.3)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(34, 197, 94, 0.3)';"
+                                        onmouseout="this.style.background='linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                        <i class="fas fa-external-link-alt"></i> <span>Live</span>
+                                    </a>
+                                <?php endif; ?>
+
+                                <?php if (!empty($p['video_url'])): ?>
+                                    <a href="<?php echo htmlspecialchars($p['video_url']); ?>" target="_blank" rel="noopener noreferrer"
+                                        style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.6rem 1rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;"
+                                        onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'; this.style.transform='translateY(-2px)';"
+                                        onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.transform='translateY(0)';">
+                                        <i class="fas fa-video"></i> <span>Video</span>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -1511,6 +1593,54 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
 
     </div>
 
+    <!-- Project Details Modal -->
+    <div id="projectModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.3s ease;">
+        <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px; padding: 2.5rem; backdrop-filter: blur(10px); max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative;">
+            <button onclick="closeProjectModal()"
+                style="position: absolute; top: 1.5rem; right: 1.5rem; width: 36px; height: 36px; border-radius: 50%; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--accent); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
+                onmouseover="this.style.background='rgba(59, 130, 246, 0.3)'; this.style.transform='scale(1.1)';"
+                onmouseout="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.transform='scale(1)';">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <h2 id="projectTitle" style="color: var(--accent); font-size: 1.8rem; margin-bottom: 1rem; margin-top: 0; padding-right: 2.5rem;">
+            </h2>
+
+            <div id="projectTags" style="margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem;"></div>
+
+            <div id="projectImageContainer" style="display: none; margin-bottom: 1.5rem; width: 100%; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.5rem; background: rgba(59, 130, 246, 0.08);">
+                <img id="projectImg" src="" alt="Project" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; display: block;">
+            </div>
+
+            <div id="projectDescription" style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.8; margin-bottom: 1.5rem; white-space: pre-wrap;"></div>
+
+            <!-- Action Buttons -->
+            <div id="projectLinks" style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                <a id="projectGitLink" href="" target="_blank" rel="noopener noreferrer"
+                    style="display: none; align-items: center; gap: 0.5rem; padding: 0.7rem 1.5rem; background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; font-size: 0.95rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;"
+                    onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateY(-2px)';"
+                    onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.transform='translateY(0)';">
+                    <i class="fab fa-github"></i> <span>Git Repository</span>
+                </a>
+                
+                <a id="projectLiveLink" href="" target="_blank" rel="noopener noreferrer"
+                    style="display: none; align-items: center; gap: 0.5rem; padding: 0.7rem 1.5rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); color: #22c55e; border: 1.5px solid rgba(34, 197, 94, 0.4); border-radius: 8px; font-size: 0.95rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;"
+                    onmouseover="this.style.background='rgba(34, 197, 94, 0.3)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(34, 197, 94, 0.3)';"
+                    onmouseout="this.style.background='linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1))'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                    <i class="fas fa-external-link-alt"></i> <span>Live Demo</span>
+                </a>
+
+                <a id="projectVideoLink" href="" target="_blank" rel="noopener noreferrer"
+                    style="display: none; align-items: center; gap: 0.5rem; padding: 0.7rem 1.5rem; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; font-size: 0.95rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;"
+                    onmouseover="this.style.background='rgba(239, 68, 68, 0.25)'; this.style.transform='translateY(-2px)';"
+                    onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.transform='translateY(0)';">
+                    <i class="fas fa-video"></i> <span>Watch Video</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Achievement Details Modal -->
     <style>
         @keyframes fadeIn {
@@ -1622,6 +1752,82 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 closeAchievementModal();
+                closeProjectModal();
+            }
+        });
+
+        // Project Modal logic
+        function openProjectModal(project) {
+            const modal = document.getElementById('projectModal');
+            const title = document.getElementById('projectTitle');
+            const description = document.getElementById('projectDescription');
+            const imageContainer = document.getElementById('projectImageContainer');
+            const img = document.getElementById('projectImg');
+            
+            const gitLink = document.getElementById('projectGitLink');
+            const liveLink = document.getElementById('projectLiveLink');
+            const videoLink = document.getElementById('projectVideoLink');
+            const tagsContainer = document.getElementById('projectTags');
+
+            title.textContent = project.title;
+            description.textContent = project.description;
+
+            // Handle Tags
+            tagsContainer.innerHTML = '';
+            if (project.tags) {
+                const tags = project.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+                tags.forEach(tag => {
+                    const span = document.createElement('span');
+                    span.textContent = tag;
+                    span.style.cssText = 'background: rgba(59, 130, 246, 0.1); color: var(--text-muted); font-size: 0.8rem; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.2);';
+                    tagsContainer.appendChild(span);
+                });
+            }
+
+            // Handle Image
+            if (project.image_url && project.image_url.trim() !== '') {
+                imageContainer.style.display = 'block';
+                img.src = project.image_url;
+            } else {
+                imageContainer.style.display = 'none';
+            }
+
+            // Handle Links
+            if (project.git_url && project.git_url.trim() !== '') {
+                gitLink.href = project.git_url;
+                gitLink.style.display = 'inline-flex';
+            } else {
+                gitLink.style.display = 'none';
+            }
+
+            if (project.live_demo_url && project.live_demo_url.trim() !== '') {
+                liveLink.href = project.live_demo_url;
+                liveLink.style.display = 'inline-flex';
+            } else {
+                liveLink.style.display = 'none';
+            }
+
+            if (project.video_url && project.video_url.trim() !== '') {
+                videoLink.href = project.video_url;
+                videoLink.style.display = 'inline-flex';
+            } else {
+                videoLink.style.display = 'none';
+            }
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProjectModal() {
+            const modal = document.getElementById('projectModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        document.addEventListener('click', function (event) {
+            const projModal = document.getElementById('projectModal');
+            if (event.target === projModal) {
+                closeProjectModal();
             }
         });
     </script>

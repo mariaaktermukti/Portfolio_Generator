@@ -11,6 +11,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <li><a href="education.php" class="<?php echo $current_page == 'education.php' ? 'active' : ''; ?>"><i class="fas fa-graduation-cap"></i> Education</a></li>
             <li><a href="skills.php" class="<?php echo $current_page == 'skills.php' ? 'active' : ''; ?>"><i class="fas fa-star"></i> Skills</a></li>
             <li><a href="work.php" class="<?php echo $current_page == 'work.php' ? 'active' : ''; ?>"><i class="fas fa-briefcase"></i> Work</a></li>
+            <li><a href="projects.php" class="<?php echo $current_page == 'projects.php' ? 'active' : ''; ?>"><i class="fas fa-project-diagram"></i> Projects</a></li>
             <li><a href="achievements.php" class="<?php echo $current_page == 'achievements.php' ? 'active' : ''; ?>"><i class="fas fa-trophy"></i> Achievements</a></li>
             <li><a href="blogs.php" class="<?php echo $current_page == 'blogs.php' ? 'active' : ''; ?>"><i class="fas fa-blog"></i> Blogs</a></li>
             <li><a href="reviews.php" class="<?php echo $current_page == 'reviews.php' ? 'active' : ''; ?>"><i class="fas fa-comments"></i> Reviews</a></li>

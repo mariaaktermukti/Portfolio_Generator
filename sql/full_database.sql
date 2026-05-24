@@ -92,7 +92,22 @@ CREATE TABLE IF NOT EXISTS achievements (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX (user_id)
 );
-
+-- Table: projects
+CREATE TABLE IF NOT EXISTS projects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(200),
+    description TEXT,
+    image_url VARCHAR(500),
+    video_url VARCHAR(500),
+    git_url VARCHAR(500),
+    live_demo_url VARCHAR(500),
+    tags VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX (user_id)
+);
 -- Table: blogs
 CREATE TABLE IF NOT EXISTS blogs (
     id INT AUTO_INCREMENT PRIMARY KEY,
