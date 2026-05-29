@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     account_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     is_admin BOOLEAN DEFAULT FALSE,
+    section_order TEXT,
+    section_hidden TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     is_deleted BOOLEAN DEFAULT FALSE
 );
@@ -24,6 +26,7 @@ CREATE TABLE IF NOT EXISTS about (
     bio TEXT,
     title VARCHAR(100),
     profile_image VARCHAR(255),
+    about_image VARCHAR(255),
     is_deleted BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX (user_id)
@@ -37,6 +40,7 @@ CREATE TABLE IF NOT EXISTS contact (
     address TEXT,
     linkedin VARCHAR(255),
     github VARCHAR(255),
+    contact_image VARCHAR(255),
     is_deleted BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX (user_id)
@@ -51,6 +55,7 @@ CREATE TABLE IF NOT EXISTS education (
     start_date DATE,
     end_date DATE,
     description TEXT,
+    result VARCHAR(100),
     is_deleted BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX (user_id)
@@ -62,6 +67,8 @@ CREATE TABLE IF NOT EXISTS skills (
     user_id INT NOT NULL,
     skill_name VARCHAR(100),
     proficiency INT,
+    skill_group VARCHAR(100),
+    image_url VARCHAR(255),
     is_deleted BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX (user_id)
@@ -88,6 +95,8 @@ CREATE TABLE IF NOT EXISTS achievements (
     title VARCHAR(150),
     date_earned DATE,
     description TEXT,
+    certificate_url VARCHAR(255),
+    certificate_image_url VARCHAR(255),
     is_deleted BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX (user_id)
@@ -120,6 +129,37 @@ CREATE TABLE IF NOT EXISTS blogs (
     INDEX (user_id)
 );
 
+-- Table: research
+CREATE TABLE IF NOT EXISTS research (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    publication_date DATE,
+    link VARCHAR(255),
+    tags VARCHAR(255),
+    is_deleted TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX (user_id)
+);
+
+-- Table: publications
+CREATE TABLE IF NOT EXISTS publications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    authors VARCHAR(255),
+    journal_conference VARCHAR(255),
+    publish_date DATE,
+    link VARCHAR(255),
+    abstract TEXT,
+    is_deleted TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX (user_id)
+);
+
 -- Table: reviews
 CREATE TABLE IF NOT EXISTS reviews (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -127,6 +167,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     visitor_name VARCHAR(100),
     rating INT CHECK (rating >= 1 AND rating <= 5),
     comment TEXT,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX (user_id)
