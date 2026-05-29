@@ -92,27 +92,29 @@ $blogs = $stmt->fetchAll();
     <div class="glass-panel">
         <h3>Your Blog Posts</h3>
         <?php if (count($blogs) > 0): ?>
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="card-grid">
                 <?php foreach ($blogs as $blog): ?>
-                    <div class="card">
-                        <h4 style="margin-bottom: 0.2rem;"><?php echo htmlspecialchars($blog['title']); ?></h4>
+                    <div class="card" style="display: flex; flex-direction: column;">
+                        <h4 style="margin-bottom: 0.2rem; word-break: break-word;"><?php echo htmlspecialchars($blog['title']); ?></h4>
                         <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">
                             <i class="fas fa-clock"></i> <?php echo date('F j, Y, g:i a', strtotime($blog['created_at'])); ?>
                         </div>
-                        <p style="margin-bottom: 1rem;"><?php echo nl2br(htmlspecialchars($blog['content'])); ?></p>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <a href="blogs.php?edit=<?php echo $blog['id']; ?>" class="btn" style="width: auto; padding: 0.3rem 0.8rem; font-size: 0.8rem; text-decoration: none;"><i class="fas fa-edit"></i> Edit Post</a>
-                            <form method="POST">
+                        <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.95rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                            <?php echo nl2br(htmlspecialchars($blog['content'])); ?>
+                        </p>
+                        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: auto;">
+                            <a href="blogs.php?edit=<?php echo $blog['id']; ?>" class="btn" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;"><i class="fas fa-edit"></i> Edit</a>
+                            <form method="POST" style="margin: 0;">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="id" value="<?php echo $blog['id']; ?>">
-                                <button type="submit" class="btn btn-danger" style="width: auto; padding: 0.3rem 0.8rem; font-size: 0.8rem;"><i class="fas fa-trash"></i> Delete Post</button>
+                                <button type="submit" class="btn btn-danger" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;"><i class="fas fa-trash"></i> Delete</button>
                             </form>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <p style="color: var(--text-muted);">No blog posts found. Start sharing your thoughts!</p>
+            <p style="color: var(--text-muted); text-align: center; padding: 2rem 0;">No blog posts found. Start sharing your thoughts!</p>
         <?php endif; ?>
     </div>
 </main>

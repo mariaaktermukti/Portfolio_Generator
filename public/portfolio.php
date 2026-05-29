@@ -104,6 +104,16 @@ $stmt_blogs = $pdo->prepare("SELECT b.* FROM blogs b JOIN users u ON b.user_id =
 $stmt_blogs->execute([$user_id]);
 $blogs = $stmt_blogs->fetchAll();
 
+// Fetch Research
+$stmt_research = $pdo->prepare("SELECT r.* FROM research r JOIN users u ON r.user_id = u.id WHERE u.id = ? AND r.is_deleted = 0 ORDER BY r.publication_date DESC, r.created_at DESC");
+$stmt_research->execute([$user_id]);
+$researches = $stmt_research->fetchAll();
+
+// Fetch Publications
+$stmt_pub = $pdo->prepare("SELECT p.* FROM publications p JOIN users u ON p.user_id = u.id WHERE u.id = ? AND p.is_deleted = 0 ORDER BY p.publish_date DESC, p.created_at DESC");
+$stmt_pub->execute([$user_id]);
+$publications = $stmt_pub->fetchAll();
+
 // Add status column if it doesn't exist
 try {
     $pdo->exec("ALTER TABLE reviews ADD COLUMN status VARCHAR(20) DEFAULT 'pending'");
@@ -120,6 +130,23 @@ $stmt_avg_rating = $pdo->prepare("SELECT AVG(rating) as avg_rating FROM reviews 
 $stmt_avg_rating->execute([$user_id]);
 $avg_rating_row = $stmt_avg_rating->fetch();
 $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'], 1) : 'No ratings yet';
+
+// Fetch Section Order
+$stmt_order = $pdo->prepare("SELECT section_order FROM users WHERE id = ?");
+$stmt_order->execute([$user_id]);
+$section_order_str = $stmt_order->fetchColumn();
+
+$default_sections = ['about', 'skills', 'work', 'projects', 'education', 'achievements', 'blogs', 'research', 'publications', 'contact', 'reviews'];
+if (empty($section_order_str)) {
+    $section_order = $default_sections;
+} else {
+    $section_order = explode(',', $section_order_str);
+    foreach ($default_sections as $sec) {
+        if (!in_array($sec, $section_order)) {
+            $section_order[] = $sec;
+        }
+    }
+}
 
 ?>
 <!DOCTYPE html>
@@ -141,183 +168,239 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             box-sizing: border-box;
         }
 
-        /* Navigation Header Styles */
+        /* Navigation Header Styles - Professional & Compact */
         .portfolio-nav {
             position: sticky;
             top: 0;
             z-index: 1000;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem 2rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            padding: 0;
+        }
+
+        .portfolio-nav-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 1rem;
         }
 
         .portfolio-nav ul {
             list-style: none;
             display: flex;
-            gap: 0.5rem;
-            margin: 0 auto;
+            margin: 0;
             padding: 0;
-            flex-wrap: wrap;
-            max-width: 1280px;
-            width: 100%;
             align-items: center;
-            justify-content: flex-start;
-            box-sizing: border-box;
+        }
+
+        .portfolio-nav > .portfolio-nav-inner > ul > li {
+            position: relative;
         }
 
         .portfolio-nav a {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.6rem 1rem;
+            padding: 1.25rem 1rem;
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 0.9rem;
-            border-radius: 6px;
-            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
             white-space: nowrap;
-            border: 1px solid transparent;
         }
 
-        .portfolio-nav a:hover {
-            color: var(--accent);
-            background: rgba(59, 130, 246, 0.1);
-            border-color: rgba(59, 130, 246, 0.3);
-            transform: translateY(-2px);
-        }
-
+        .portfolio-nav a:hover,
         .portfolio-nav a.active {
             color: #fff;
-            background: rgba(59, 130, 246, 0.2);
-            border-color: var(--accent);
+        }
+
+        .portfolio-nav a.active::after,
+        .portfolio-nav li.nav-dropdown.active-parent > a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 3px 3px 0 0;
+            box-shadow: 0 -2px 10px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Dropdown Styles */
+        .nav-dropdown .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(15px);
+            background: rgba(30, 41, 59, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 0.5rem 0;
+        }
+
+        .nav-dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .nav-dropdown .dropdown-menu li {
+            width: 100%;
+        }
+
+        .nav-dropdown .dropdown-menu a {
+            padding: 0.8rem 1.2rem;
+            width: 100%;
+            box-sizing: border-box;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 0.9rem;
+        }
+
+        .nav-dropdown .dropdown-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .nav-dropdown .dropdown-menu a:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--accent);
+        }
+
+        .nav-dropdown .dropdown-menu a.active {
+            color: var(--accent);
+        }
+
+        .nav-dropdown .dropdown-menu a.active::after {
+            display: none;
         }
 
         html {
             scroll-behavior: smooth;
         }
 
-        /* Large Desktop (1920px and up) */
-        @media (min-width: 1920px) {
-            .portfolio-container {
-                padding: 2.5rem 0;
+        /* Mobile Adjustments */
+        @media (max-width: 1023px) {
+            .portfolio-nav-inner {
+                justify-content: flex-start;
+                overflow-x: auto;
+                -ms-overflow-style: none;  
+                scrollbar-width: none; 
             }
-
-            .portfolio-nav {
-                padding: 1.2rem 2.5rem;
+            .portfolio-nav-inner::-webkit-scrollbar {
+                display: none;
             }
-        }
-
-        /* Tablet (1024px - 1279px) */
-        @media (max-width: 1279px) {
-            .portfolio-container {
-                padding: 1.5rem 0;
-            }
-
-            .portfolio-nav {
-                padding: 0.75rem 1.5rem;
-            }
-
             .portfolio-nav a {
-                padding: 0.5rem 0.75rem;
+                padding: 1rem 0.75rem;
                 font-size: 0.85rem;
             }
-        }
-
-        /* Tablet (768px - 1023px) */
-        @media (max-width: 1023px) {
-            .portfolio-container {
-                padding: 1.25rem 0;
+            /* Change Dropdown to Inline on small screens to avoid clipping */
+            .nav-dropdown .dropdown-menu {
+                display: none;
+                position: static;
+                transform: none;
+                box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+                border: none;
+                border-radius: 0;
+                background: rgba(0, 0, 0, 0.3);
+                flex-direction: row; 
+                padding: 0;
+                min-width: auto;
+                opacity: 1;
+                visibility: visible;
             }
-
-            .portfolio-nav {
-                padding: 0.5rem 1.25rem;
-                overflow-x: auto;
+            .nav-dropdown:hover .dropdown-menu {
+                display: flex;
             }
-
-            .portfolio-nav ul {
-                gap: 0.25rem;
-            }
-
-            .portfolio-nav a {
-                padding: 0.4rem 0.6rem;
-                font-size: 0.8rem;
-                flex-shrink: 0;
-            }
-        }
-
-        /* Mobile (480px - 767px) */
-        @media (max-width: 767px) {
-            .portfolio-container {
-                padding: 1rem 0;
-            }
-
-            .portfolio-nav {
-                padding: 0.5rem 1rem;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .portfolio-nav ul {
-                gap: 0.2rem;
-            }
-
-            .portfolio-nav a {
-                padding: 0.35rem 0.5rem;
-                font-size: 0.75rem;
-                flex-shrink: 0;
-            }
-        }
-
-        /* Small Mobile (Below 480px) */
-        @media (max-width: 479px) {
-            .portfolio-container {
-                padding: 0.75rem 0;
-            }
-
-            .portfolio-nav {
-                padding: 0.5rem 0.75rem;
-            }
-
-            .portfolio-nav a {
-                padding: 0.3rem 0.4rem;
-                font-size: 0.7rem;
+            .nav-dropdown .dropdown-menu a {
+                border-bottom: none;
+                border-left: 1px solid rgba(255, 255, 255, 0.05);
+                padding: 1rem 0.75rem;
             }
         }
     </style>
 </head>
 
 <body>
+    <?php
+    // Prepare menu items dynamically and group Academic items together
+    $menu_items = [];
+    $academic_items = [];
+    $has_academic = false;
+    $academic_index = -1;
+
+    foreach ($section_order as $sec) {
+        if (in_array($sec, ['education', 'research', 'publications'])) {
+            if ($sec == 'education' && $education) {
+                $academic_items[] = ['id' => 'education', 'icon' => 'fa-graduation-cap', 'label' => 'Education'];
+            } elseif ($sec == 'research' && $researches) {
+                $academic_items[] = ['id' => 'research', 'icon' => 'fa-microscope', 'label' => 'Research'];
+            } elseif ($sec == 'publications' && $publications) {
+                $academic_items[] = ['id' => 'publications', 'icon' => 'fa-book', 'label' => 'Publications'];
+            }
+            
+            if (!$has_academic && count($academic_items) > 0) {
+                $has_academic = true;
+                $academic_index = count($menu_items);
+                $menu_items[] = 'ACADEMICS_PLACEHOLDER';
+            }
+        } else {
+            if ($sec == 'about') $menu_items[] = ['id' => 'about', 'icon' => 'fa-user', 'label' => 'About'];
+            elseif ($sec == 'skills' && $skills) $menu_items[] = ['id' => 'skills', 'icon' => 'fa-star', 'label' => 'Skills'];
+            elseif ($sec == 'work' && $work) $menu_items[] = ['id' => 'work', 'icon' => 'fa-briefcase', 'label' => 'Work'];
+            elseif ($sec == 'projects' && $projects) $menu_items[] = ['id' => 'projects', 'icon' => 'fa-project-diagram', 'label' => 'Projects'];
+            elseif ($sec == 'achievements' && $achievements) $menu_items[] = ['id' => 'achievements', 'icon' => 'fa-trophy', 'label' => 'Achievements'];
+            elseif ($sec == 'blogs' && $blogs) $menu_items[] = ['id' => 'blogs', 'icon' => 'fa-blog', 'label' => 'Blogs'];
+            elseif ($sec == 'contact') $menu_items[] = ['id' => 'contact', 'icon' => 'fa-envelope', 'label' => 'Contact'];
+            elseif ($sec == 'reviews' && $reviews) $menu_items[] = ['id' => 'reviews', 'icon' => 'fa-comments', 'label' => 'Reviews'];
+        }
+    }
+
+    if ($has_academic) {
+        $menu_items[$academic_index] = [
+            'type' => 'dropdown',
+            'id' => 'academic',
+            'icon' => 'fa-university',
+            'label' => 'Academics',
+            'items' => $academic_items
+        ];
+    }
+    ?>
+
     <!-- Navigation Header -->
     <nav class="portfolio-nav">
-        <ul>
-            <li><a href="#hero" onclick="scrollToSection('hero')" class="active"><i class="fas fa-home"></i> Home</a>
-            </li>
-            <li><a href="#about" onclick="scrollToSection('about')"><i class="fas fa-user"></i> About</a></li>
-            <?php if ($skills): ?>
-                <li><a href="#skills" onclick="scrollToSection('skills')"><i class="fas fa-star"></i> Skills</a></li>
-            <?php endif; ?>
-            <?php if ($work): ?>
-                <li><a href="#work" onclick="scrollToSection('work')"><i class="fas fa-briefcase"></i> Work</a></li>
-            <?php endif; ?>
-            <?php if ($projects): ?>
-                <li><a href="#projects" onclick="scrollToSection('projects')"><i class="fas fa-project-diagram"></i> Projects</a></li>
-            <?php endif; ?>
-            <?php if ($education): ?>
-                <li><a href="#education" onclick="scrollToSection('education')"><i class="fas fa-graduation-cap"></i>
-                        Education</a></li><?php endif; ?>
-            <?php if ($achievements): ?>
-                <li><a href="#achievements" onclick="scrollToSection('achievements')"><i class="fas fa-trophy"></i>
-                        Achievements</a></li><?php endif; ?>
-            <?php if ($blogs): ?>
-                <li><a href="#blogs" onclick="scrollToSection('blogs')"><i class="fas fa-blog"></i> Blogs</a></li>
-            <?php endif; ?>
-            <li><a href="#contact" onclick="scrollToSection('contact')"><i class="fas fa-envelope"></i> Contact</a></li>
-            <?php if ($reviews): ?>
-                <li><a href="#reviews" onclick="scrollToSection('reviews')"><i class="fas fa-comments"></i> Reviews</a></li>
-            <?php endif; ?>
-        </ul>
+        <div class="portfolio-nav-inner">
+            <ul>
+                <li><a href="#hero" onclick="scrollToSection('hero')" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
+                <?php foreach ($menu_items as $item): ?>
+                    <?php if (is_array($item) && isset($item['type']) && $item['type'] === 'dropdown'): ?>
+                        <li class="nav-dropdown">
+                            <a href="javascript:void(0)" class="dropdown-trigger"><i class="fas <?php echo $item['icon']; ?>"></i> <?php echo $item['label']; ?> <i class="fas fa-chevron-down" style="font-size: 0.7em; margin-left: 4px;"></i></a>
+                            <ul class="dropdown-menu">
+                                <?php foreach ($item['items'] as $subitem): ?>
+                                    <li><a href="#<?php echo $subitem['id']; ?>" onclick="scrollToSection('<?php echo $subitem['id']; ?>')" class="nav-link"><i class="fas <?php echo $subitem['icon']; ?>"></i> <?php echo $subitem['label']; ?></a></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </li>
+                    <?php elseif (is_array($item)): ?>
+                        <li><a href="#<?php echo $item['id']; ?>" onclick="scrollToSection('<?php echo $item['id']; ?>')" class="nav-link"><i class="fas <?php echo $item['icon']; ?>"></i> <?php echo $item['label']; ?></a></li>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     </nav>
 
     <!-- Success Notification -->
@@ -626,6 +709,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
             </style>
         </header>
 
+        <?php foreach ($section_order as $sec): switch ($sec): case 'about': ?>
         <!-- About Me Section -->
         <section class="glass-panel about-section" id="about"
             style="animation-delay: 0.05s; display: grid; grid-template-columns: 1fr 1.5fr; gap: 3rem; align-items: center; margin-top: 2rem;">
@@ -659,7 +743,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 </div>
             </div>
         </section>
-
+        <?php break; case 'skills': ?>
         <!-- Skills -->
         <?php if ($skills): ?>
             <style>
@@ -1040,6 +1124,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 <?php endif; ?>
             </section>
         <?php endif; ?>
+        <?php break; case 'work': ?>
 
         <!-- Work Experience -->
         <?php if ($work): ?>
@@ -1063,6 +1148,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 </div>
             </section>
         <?php endif; ?>
+        <?php break; case 'projects': ?>
 
         <!-- Projects -->
         <?php if ($projects): ?>
@@ -1138,6 +1224,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 </div>
             </section>
         <?php endif; ?>
+        <?php break; case 'education': ?>
 
         <!-- Education -->
         <?php if ($education): ?>
@@ -1162,6 +1249,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 </div>
             </section>
         <?php endif; ?>
+        <?php break; case 'achievements': ?>
 
         <!-- Achievements -->
         <?php if ($achievements): ?>
@@ -1214,25 +1302,117 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 </div>
             </section>
         <?php endif; ?>
+        <?php break; case 'research': ?>
+
+        <!-- Research -->
+        <?php if (!empty($researches)): ?>
+            <section class="glass-panel" id="research" style="animation-delay: 0.45s;">
+                <h2><i class="fas fa-microscope" style="color: var(--accent);"></i> Research</h2>
+                <div class="card-grid" style="margin-top: 1.5rem;">
+                    <?php foreach ($researches as $research): ?>
+                        <div class="card" style="display: flex; flex-direction: column; height: 100%;">
+                            <h3 style="color: #fff; margin-bottom: 0.5rem; word-break: break-word;"><?php echo htmlspecialchars($research['title']); ?></h3>
+                            <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                                <?php if ($research['publication_date']): ?>
+                                    <i class="fas fa-calendar-alt"></i> <?php echo htmlspecialchars($research['publication_date']); ?>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($research['tags']): ?>
+                                <div style="margin-bottom: 0.5rem;">
+                                    <?php 
+                                    $tags = explode(',', $research['tags']);
+                                    foreach($tags as $tag): 
+                                    ?>
+                                        <span style="display: inline-block; background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.8rem; margin-right: 0.3rem; margin-bottom: 0.3rem;">
+                                            <?php echo htmlspecialchars(trim($tag)); ?>
+                                        </span>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                            <p style="color: var(--text-muted); margin: 0 0 1.25rem 0; flex-grow: 1;">
+                                <?php echo nl2br(htmlspecialchars($research['description'])); ?>
+                            </p>
+                            <?php if ($research['link']): ?>
+                                <div style="display: flex; gap: 0.75rem; margin-top: auto; flex-wrap: wrap;">
+                                    <a href="<?php echo htmlspecialchars($research['link']); ?>" target="_blank"
+                                        rel="noopener noreferrer"
+                                        style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.6rem 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); color: #22c55e; border: 1.5px solid rgba(34, 197, 94, 0.4); border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">
+                                        <i class="fas fa-external-link-alt"></i> <span>View Link</span>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php endif; ?>
+        <?php break; case 'publications': ?>
+
+        <!-- Publications -->
+        <?php if (!empty($publications)): ?>
+            <section class="glass-panel" id="publications" style="animation-delay: 0.45s;">
+                <h2><i class="fas fa-book" style="color: var(--accent);"></i> Publications</h2>
+                <div class="card-grid" style="margin-top: 1.5rem;">
+                    <?php foreach ($publications as $pub): ?>
+                        <div class="card" style="display: flex; flex-direction: column; height: 100%;">
+                            <h3 style="color: #fff; margin-bottom: 0.5rem; word-break: break-word;"><?php echo htmlspecialchars($pub['title']); ?></h3>
+                            <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                                <?php if ($pub['authors']): ?>
+                                    <i class="fas fa-users"></i> <?php echo htmlspecialchars($pub['authors']); ?><br>
+                                <?php endif; ?>
+                                <?php if ($pub['journal_conference']): ?>
+                                    <i class="fas fa-book-open"></i> <?php echo htmlspecialchars($pub['journal_conference']); ?> 
+                                <?php endif; ?>
+                                <?php if ($pub['publish_date']): ?>
+                                   <br> <i class="fas fa-calendar-alt"></i> <?php echo htmlspecialchars($pub['publish_date']); ?>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($pub['abstract']): ?>
+                                <p style="color: var(--text-muted); margin: 0 0 1.25rem 0; flex-grow: 1;">
+                                    <?php echo nl2br(htmlspecialchars($pub['abstract'])); ?>
+                                </p>
+                            <?php endif; ?>
+                            <?php if ($pub['link']): ?>
+                                <div style="display: flex; gap: 0.75rem; margin-top: auto; flex-wrap: wrap;">
+                                    <a href="<?php echo htmlspecialchars($pub['link']); ?>" target="_blank"
+                                        rel="noopener noreferrer"
+                                        style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.6rem 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1)); color: #22c55e; border: 1.5px solid rgba(34, 197, 94, 0.4); border-radius: 8px; font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">
+                                        <i class="fas fa-external-link-alt"></i> <span>View Link</span>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
+        <?php endif; ?>
+        <?php break; case 'blogs': ?>
 
         <!-- Blogs -->
         <?php if ($blogs): ?>
             <section class="glass-panel" id="blogs" style="animation-delay: 0.5s;">
                 <h2><i class="fas fa-blog" style="color: var(--accent);"></i> Blog Posts</h2>
-                <div style="margin-top: 1.5rem;">
+                <div class="card-grid" style="margin-top: 1.5rem;">
                     <?php foreach ($blogs as $b): ?>
-                        <article class="card" style="margin-bottom: 1.5rem;">
-                            <h3 style="color: var(--accent); margin-bottom: 0.5rem;">
+                        <div class="card" style="display: flex; flex-direction: column; height: 100%;">
+                            <h3 style="color: var(--accent); margin-bottom: 0.5rem; word-break: break-word;">
                                 <?php echo htmlspecialchars($b['title']); ?>
                             </h3>
-                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;"><i
-                                    class="fas fa-clock"></i> <?php echo date('M j, Y', strtotime($b['created_at'])); ?></div>
-                            <p><?php echo nl2br(htmlspecialchars($b['content'])); ?></p>
-                        </article>
+                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+                                <i class="fas fa-clock"></i> <?php echo date('M j, Y', strtotime($b['created_at'])); ?>
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 0.95rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                                <?php echo nl2br(htmlspecialchars($b['content'])); ?>
+                            </p>
+                            <div style="margin-top: auto; padding-top: 1rem; text-align: right;">
+                                <button class="btn" style="padding: 0.4rem 1rem; font-size: 0.8rem; background: rgba(59, 130, 246, 0.1); color: var(--accent);" onclick="openBlogModal(<?php echo htmlspecialchars(json_encode($b)); ?>)">Read More</button>
+                            </div>
+                        </div>
                     <?php endforeach; ?>
                 </div>
             </section>
         <?php endif; ?>
+        <?php break; case 'contact': ?>
 
         <!-- Contact & Review -->
         <section class="glass-panel" id="contact"
@@ -1451,6 +1631,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 </div>
             </div>
         </section>
+        <?php break; case 'reviews': ?>
 
         <!-- Reviews List - Carousel -->
         <?php if ($reviews): ?>
@@ -1589,6 +1770,7 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 </script>
             </section>
         <?php endif; ?>
+        <?php endswitch; endforeach; ?>
 
 
     </div>
@@ -1836,7 +2018,8 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
         // Navigation active state on scroll
         function updateActiveNav() {
             const sections = document.querySelectorAll('section[id], header[id]');
-            const navLinks = document.querySelectorAll('.portfolio-nav a');
+            const navLinks = document.querySelectorAll('.portfolio-nav a.nav-link');
+            const dropdowns = document.querySelectorAll('.nav-dropdown');
 
             let current = 'hero';
             let minDistance = Infinity;
@@ -1854,10 +2037,20 @@ $avg_rating = $avg_rating_row['avg_rating'] ? round($avg_rating_row['avg_rating'
                 }
             });
 
+            // Reset active states
+            navLinks.forEach(link => link.classList.remove('active'));
+            dropdowns.forEach(dropdown => dropdown.classList.remove('active-parent'));
+
+            // Set current active
             navLinks.forEach(link => {
-                link.classList.remove('active');
                 if (link.getAttribute('href') === '#' + current) {
                     link.classList.add('active');
+                    
+                    // If this link is inside a dropdown menu, highlight the parent dropdown trigger as well
+                    const parentDropdown = link.closest('.nav-dropdown');
+                    if (parentDropdown) {
+                        parentDropdown.classList.add('active-parent');
+                    }
                 }
             });
         }
