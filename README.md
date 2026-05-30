@@ -1,75 +1,187 @@
-# 🎯 Auto Portfolio Generator System
+# 🎯 Portfolio Generator System - Full Project Architecture & Directory Map
 
-## 📌 Project Overview
-The **Auto Portfolio Generator** is a dynamic, fully responsive platform built with PHP and MySQL. It allows users to register, fill in their professional details, and instantly generate a premium, fully customized portfolio website. The system features a modern glassmorphism design, comprehensive user dashboard, advanced analytics, PDF resume generation, and a dedicated admin panel for user management.
-
----
-
-## 🚀 Key Features
-- **User Authentication**: Secure Login and Registration system.
-- **Dynamic Dashboard**: Interactive UI using PRG pattern to manage About, Education, Work Experience, Skills, Achievements, and Blogs.
-- **Auto-Generated Portfolio**: A beautifully designed, unique portfolio page for each user that updates instantly.
-- **PDF Export**: Users can download their portfolio details as a professionally formatted PDF resume using FPDF.
-- **QR Code Generation**: Instantly generate a shareable QR code for the public portfolio link.
-- **Visitor Analytics**: Built-in analytics dashboard to track portfolio profile views.
-- **Reviews & Ratings**: Visitors can leave reviews and rate user portfolios.
-- **Admin Panel**: Dedicated admin interface to monitor the system and approve or manage registered users.
+Welcome to your complete interactive project reference guide! Below is a comprehensive walkthrough of the entire system architecture, directory layouts, database schemas, and data flow designs.
 
 ---
 
-## 🔗 Project Links
+## 📂 Visual Project Directory Tree
 
-*(Assuming the project is running on XAMPP at `http://localhost/Portfolio_generator/`)*
+Below is the directory map of the codebase in your workspace (`c:\Users\User\Desktop\dbms project\`). You can click on any file to view or edit it.
 
-### 👤 User Site & Authentication
-- **Landing Page**: [http://localhost/Portfolio_generator/index.php](http://localhost/Portfolio_generator/index.php)
-- **User Registration**: [http://localhost/Portfolio_generator/auth/register.php](http://localhost/Portfolio_generator/auth/register.php)
-- **User Login**: [http://localhost/Portfolio_generator/auth/login.php](http://localhost/Portfolio_generator/auth/login.php)
-
-### 📊 User Dashboard *(Requires Login)*
-- **Dashboard Home**: [http://localhost/Portfolio_generator/dashboard/index.php](http://localhost/Portfolio_generator/dashboard/index.php)
-- **Manage About**: [http://localhost/Portfolio_generator/dashboard/about.php](http://localhost/Portfolio_generator/dashboard/about.php)
-- **Manage Education**: [http://localhost/Portfolio_generator/dashboard/education.php](http://localhost/Portfolio_generator/dashboard/education.php)
-- **Manage Work Experience**: [http://localhost/Portfolio_generator/dashboard/work.php](http://localhost/Portfolio_generator/dashboard/work.php)
-- **Manage Skills**: [http://localhost/Portfolio_generator/dashboard/skills.php](http://localhost/Portfolio_generator/dashboard/skills.php)
-- **Manage Achievements**: [http://localhost/Portfolio_generator/dashboard/achievements.php](http://localhost/Portfolio_generator/dashboard/achievements.php)
-- **Manage Blogs**: [http://localhost/Portfolio_generator/dashboard/blogs.php](http://localhost/Portfolio_generator/dashboard/blogs.php)
-- **Manage Contact Info**: [http://localhost/Portfolio_generator/dashboard/contact.php](http://localhost/Portfolio_generator/dashboard/contact.php)
-- **Share Portfolio**: [http://localhost/Portfolio_generator/dashboard/shareable_link.php](http://localhost/Portfolio_generator/dashboard/shareable_link.php)
-
-### 🌍 Public Portfolio & Tools
-- **Public Portfolio View**: `http://localhost/Portfolio_generator/public/portfolio.php?user=YOUR_USERNAME`
-- **Submit Review/Rating**: [http://localhost/Portfolio_generator/public/submit_review.php](http://localhost/Portfolio_generator/public/submit_review.php)
-- **User Analytics**: [http://localhost/Portfolio_generator/analytics/analytics.php](http://localhost/Portfolio_generator/analytics/analytics.php)
-- **Export to PDF**: [http://localhost/Portfolio_generator/export/export_pdf.php](http://localhost/Portfolio_generator/export/export_pdf.php)
-
-### 👑 Admin Site
-- **Admin Dashboard**: [http://localhost/Portfolio_generator/admin/dashboard.php](http://localhost/Portfolio_generator/admin/dashboard.php)
-- **Approve & Manage Users**: [http://localhost/Portfolio_generator/admin/approve_users.php](http://localhost/Portfolio_generator/admin/approve_users.php)
+```text
+dbms project/
+├── ⚙️ config/                 # Core configurations and DB connections
+│   ├── 📄 db.php              # Global PDO MySQL connection (portfolio_db)
+│   ├── 📄 database.php        # Secondary PDO connection reference
+│   └── 📄 imgbb.php           # Image hosting API key configurations
+│
+├── 🔑 auth/                   # Authentication & Session handling
+│   ├── 📄 login.php           # Secure user log in with password validation
+│   ├── 📄 register.php        # Secure user sign up with validation checks
+│   └── 📄 logout.php          # Session termination script
+│
+├── 📊 dashboard/              # Dynamic User Management Panel (Logged-in pages)
+│   ├── 📄 index.php           # Home dashboard with profile statistics
+│   ├── 📄 about.php           # CRUD: Bio, profession title, and profile pictures
+│   ├── 📄 contact.php         # CRUD: Social media links, phone, and address
+│   ├── 📄 education.php       # CRUD: Degree achievements and institutions
+│   ├── 📄 work.php            # CRUD: Professional job experiences
+│   ├── 📄 skills.php          # CRUD: Programming languages & proficiencies
+│   ├── 📄 achievements.php    # CRUD: Certificates and honors
+│   ├── 📄 publications.php    # CRUD: Scientific papers or article publications
+│   ├── 📄 research.php        # CRUD: Direct academic research uploads
+│   ├── 📄 blogs.php           # CRUD: Personal blog posts
+│   ├── 📄 order_sections.php  # Drag-and-drop / rank order toggling of portfolio sections
+│   ├── 📄 qrcode.php          # QR code generation tool for sharing
+│   ├── 📄 shareable_link.php  # Public profile url and sharing dashboard
+│   ├── 📄 reviews.php         # View & approve ratings from visitors
+│   ├── 📄 upload_image.php    # Handles file systems and cloud image updates
+│   └── 📂 inc/                # Reusable UI includes for the dashboard
+│       ├── 📄 head.php        # Stylesheet linkages and standard metadata
+│       ├── 📄 sidebar.php     # Collapsible navigation link sidebar
+│       └── 📄 foot.php        # Closing elements and core scripts
+│
+├── 🌍 public/                 # Public-facing portfolio generator views
+│   ├── 📄 portfolio.php       # The ultimate high-fidelity responsive glassmorphic portfolio
+│   └── 📄 submit_review.php   # Endpoint for visitors to leave feedback
+│
+├── 📄 export/
+│   └── 📄 export_pdf.php      # PDF resume export tool utilising FPDF library
+│
+├── 👑 admin/                  # Secure Administration & Moderation Panel
+│   ├── 📄 dashboard.php       # Platform statistics dashboard
+│   ├── 📄 approve_users.php   # Account status management (approve/suspend/reject)
+│   └── 📄 reviews.php         # Admin reviews global management and pruning
+│
+├── 📈 analytics/
+│   └── 📄 analytics.php       # Profile visitor metrics and view tracking logs
+│
+├── 🗄️ sql/
+│   └── 📄 full_database.sql   # The full MySQL database creation schema & triggers
+│
+├── 📦 vendor/                 # Third-party composer dependencies
+└── 📄 composer.json           # Composer requirements (dompdf/dompdf, php-qrcode)
+```
 
 ---
 
-## 🛠 Tech Stack
-- **Backend**: PHP 8.x
-- **Database**: MySQL
-- **Frontend**: HTML5, Vanilla CSS (Glassmorphism & Modern UI), JavaScript
-- **Libraries**: FPDF (for PDF generation), PHP QR Code (for QR codes)
+## 🗺️ Architectural Flows
+
+### 1. User Access & Security Filter
+```mermaid
+graph TD
+    A[Visitor] -->|Access Dashboard| B{Is Session Valid?}
+    B -->|No| C[Redirect to auth/login.php]
+    B -->|Yes| D[Load dashboard/index.php]
+    C -->|Enter Credentials| E{Valid hash?}
+    E -->|No| C
+    E -->|Yes| F[Create Session & Log in]
+    F --> D
+```
+
+### 2. Portfolio View & Tracking Sequence
+When a visitor views `public/portfolio.php?user=username`:
+```mermaid
+sequenceDiagram
+    autonumber
+    Visitor->>portfolio.php: Request Portfolio
+    portfolio.php->>db.php: Fetch user details & status
+    alt User is Approved
+        db.php-->>portfolio.php: User portfolio details
+        portfolio.php->>analytics.php: Log view (IP address & time)
+        portfolio.php-->>Visitor: Render glassmorphic UI
+    else User is Pending/Rejected
+        db.php-->>portfolio.php: Account inactive
+        portfolio.php-->>Visitor: Render 'Profile Under Construction' message
+    end
+```
 
 ---
 
-## ⚡ Setup & Installation
+## 🗄️ Relational Database Schema Design (`portfolio_db`)
 
-1. **Start XAMPP**: Open XAMPP Control Panel and start **Apache** and **MySQL**.
-2. **Clone the Repository**: Place the `Portfolio_generator` folder inside `C:\xampp\htdocs\`.
-3. **Database Setup**:
-   - Open `http://localhost/phpmyadmin/`
-   - Create a new database named `smart_portfolio` (or check `sql/` folder for schema).
-   - Import the database SQL file provided with the project.
-4. **Composer Dependencies**: 
-   - Ensure you run `php composer.phar install` or `composer install` inside the project folder to install dependencies like FPDF.
-5. **Launch**: Navigate to `http://localhost/Portfolio_generator/` in your browser.
+The database is built on a clean relational architecture centered around the `users` table.
+
+```mermaid
+erDiagram
+    users ||--o{ about : "1-to-1 Profile Info"
+    users ||--o{ contact : "1-to-1 Social/Phone"
+    users ||--o{ education : "1-to-Many Education"
+    users ||--o{ skills : "1-to-Many Skills"
+    users ||--o{ work_experience : "1-to-Many Experience"
+    users ||--o{ achievements : "1-to-Many Honors"
+    users ||--o{ projects : "1-to-Many Projects"
+    users ||--o{ blogs : "1-to-Many Blogs"
+    users ||--o{ reviews : "1-to-Many Feedback"
+    users ||--o{ portfolio_views : "1-to-Many Views"
+    users ||--o{ logs : "1-to-Many Audit Logs"
+
+    users {
+        int id PK
+        string username UNIQUE
+        string email UNIQUE
+        string password_hash
+        enum account_status "pending/approved/rejected"
+        boolean is_admin
+        text section_order
+        text section_hidden
+        datetime created_at
+        boolean is_deleted
+    }
+    
+    about {
+        int id PK
+        int user_id FK
+        text bio
+        string title
+        string profile_image
+        string about_image
+    }
+
+    contact {
+        int id PK
+        int user_id FK
+        string phone
+        text address
+        string linkedin
+        string github
+        string contact_image
+    }
+
+    skills {
+        int id PK
+        int user_id FK
+        string skill_name
+        int proficiency "1-100"
+        string skill_group
+    }
+```
+
+### Key DBMS Implementations inside `full_database.sql`:
+1. **Foreign Key Integrity Rules**:
+   All user-related child tables reference `users(id)` with `ON DELETE CASCADE`. If an admin deletes a user, their entire footprint (skills, logs, images, views) is cleared instantly to maintain consistency and save disk space.
+2. **Audit Triggers**:
+   - `after_skill_insert`: Automatically creates a log entry when a new skill is inserted.
+   - `after_blog_insert`: Logs the title of any new blog published by the user.
+3. **Database Performance View**:
+   - `v_portfolio_summary`: Pre-aggregates user metrics (`skill_count`, `work_count`) to optimize admin dashboard render times without running nested queries repeatedly.
 
 ---
 
-## 📌 Author
-**Maria Akter Mukti**
+## ⚡ Technical Core Modules & Key Logic Files
+
+### 🛡️ Authentication Module (`/auth`)
+Handles password safety.
+- **[register.php](/auth/register.php)**: Validates input strings (ensuring no special characters in username), checks uniqueness, hashes password using `password_hash($pass, PASSWORD_BCRYPT)`, and saves accounts in `pending` status.
+- **[login.php](/auth/login.php)**: Checks credentials via `password_verify()` and sets persistent sessions (`$_SESSION['user_id']`).
+
+### 🎛️ User Dashboard CRUD (`/dashboard`)
+Fully dynamic dashboard allowing secure insertion, updating, and removal of user portfolio components.
+- **[skills.php](/dashboard/skills.php)**: Validates proficiency values (1-100), handles grouped skills (Frontend, Backend, Design).
+- **[order_sections.php](/dashboard/order_sections.php)**: Saves a dynamic JSON configuration (`section_order` & `section_hidden`) to define exactly which order sections appear on the live website.
+
+### 🌐 The Glassmorphic Front-End (`/public`)
+- **[portfolio.php](/public/portfolio.php)**: Combines HTML5, Vanilla CSS, and JS into a state-of-the-art premium portfolio page. Uses modern HSL styling, rich glassmorphism gradients, hover effects, CSS custom variables, and filters dynamically based on user setting configurations.
+
+### 🖨️ PDF Generation engine (`/export`)
+- **[export_pdf.php](/export/export_pdf.php)**: Uses FPDF. Fetches the user's relational tables (Education, Experience, Skills), structures the layout programmatically, and prints a professional corporate resume layout on the fly.
