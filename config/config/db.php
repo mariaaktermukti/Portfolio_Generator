@@ -1,8 +1,9 @@
 <?php
-$host = 'localhost';
-$dbname = 'smart_portfolio';
-$user = 'root';
-$pass = '';
+$env = parse_ini_file(__DIR__ . '/../../.env');
+$host = $env['DB_HOST'];
+$dbname = $env['DB_NAME'];
+$user = $env['DB_USER'];
+$pass = $env['DB_PASS'];
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass, [

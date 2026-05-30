@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS portfolio_db;
-USE portfolio_db;
+-- CREATE DATABASE IF NOT EXISTS portfolio_db;
+-- USE portfolio_db;
 
 -- Table: users
 CREATE TABLE IF NOT EXISTS users (
@@ -193,6 +193,7 @@ CREATE TABLE IF NOT EXISTS logs (
     INDEX (user_id)
 );
 
+/* 
 -- Trigger: after insert on skills
 DELIMITER //
 CREATE TRIGGER after_skill_insert
@@ -214,7 +215,9 @@ BEGIN
 END;
 //
 DELIMITER ;
+*/
 
+/*
 -- View: v_portfolio_summary
 CREATE OR REPLACE VIEW v_portfolio_summary AS
 SELECT 
@@ -230,3 +233,4 @@ FROM users u
 LEFT JOIN about a ON u.id = a.user_id AND a.is_deleted = 0
 LEFT JOIN contact c ON u.id = c.user_id AND c.is_deleted = 0
 WHERE u.is_deleted = 0 AND u.account_status = 'approved';
+*/

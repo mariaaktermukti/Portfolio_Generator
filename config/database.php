@@ -5,10 +5,11 @@
  */
 
 // Database credentials
-$host = 'localhost';
-$dbname = 'smart_portfolio';
-$user = 'root';
-$pass = '';
+$env = parse_ini_file(__DIR__ . '/../.env');
+$host = $env['DB_HOST'];
+$dbname = $env['DB_NAME'];
+$user = $env['DB_USER'];
+$pass = $env['DB_PASS'];
 
 try {
     // Create PDO connection
