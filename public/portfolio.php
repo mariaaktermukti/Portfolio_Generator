@@ -1390,26 +1390,100 @@ if (empty($section_order_str)) {
 
         <!-- Blogs -->
         <?php if ($blogs): ?>
-            <section class="glass-panel" id="blogs" style="animation-delay: 0.5s;">
-                <h2><i class="fas fa-blog" style="color: var(--accent);"></i> Blog Posts</h2>
-                <div class="card-grid" style="margin-top: 1.5rem;">
-                    <?php foreach ($blogs as $b): ?>
-                        <div class="card" style="display: flex; flex-direction: column; height: 100%;">
-                            <h3 style="color: var(--accent); margin-bottom: 0.5rem; word-break: break-word;">
-                                <?php echo htmlspecialchars($b['title']); ?>
-                            </h3>
-                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-                                <i class="fas fa-clock"></i> <?php echo date('M j, Y', strtotime($b['created_at'])); ?>
-                            </div>
-                            <p style="color: var(--text-muted); font-size: 0.95rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
-                                <?php echo nl2br(htmlspecialchars($b['content'])); ?>
-                            </p>
-                            <div style="margin-top: auto; padding-top: 1rem; text-align: right;">
-                                <button class="btn" style="padding: 0.4rem 1rem; font-size: 0.8rem; background: rgba(59, 130, 246, 0.1); color: var(--accent);" onclick="openBlogModal(<?php echo htmlspecialchars(json_encode($b)); ?>)">Read More</button>
-                            </div>
+            <style>
+                /* Blogs Slider styles */
+                .blog-slide {
+                    flex: 0 0 calc(100% - 1.5rem);
+                    min-width: calc(100% - 1.5rem);
+                    background: rgba(255, 255, 255, 0.02);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 16px;
+                    padding: 2rem;
+                    backdrop-filter: blur(10px);
+                    display: flex;
+                    flex-direction: column;
+                    height: 100%;
+                    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+                }
+
+                .blog-slide:hover {
+                    transform: translateY(-5px);
+                    border-color: rgba(59, 130, 246, 0.3);
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.05));
+                    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+                }
+
+                @media (min-width: 768px) {
+                    .blog-slide {
+                        flex: 0 0 calc(50% - 0.75rem) !important;
+                        min-width: calc(50% - 0.75rem) !important;
+                    }
+                }
+
+                @media (min-width: 1200px) {
+                    .blog-slide {
+                        flex: 0 0 calc(33.333% - 1rem) !important;
+                        min-width: calc(33.333% - 1rem) !important;
+                    }
+                }
+            </style>
+
+            <section class="glass-panel" id="blogs" style="animation-delay: 0.5s; overflow: hidden;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="margin: 0;"><i class="fas fa-blog" style="color: var(--accent);"></i> Blog Posts</h2>
+                    <?php if (count($blogs) > 1): ?>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="carousel-btn" onclick="blogCarousel(-1)"
+                                style="width: 40px; height: 40px; border-radius: 50%; background: rgba(79, 70, 229, 0.2); border: 1px solid rgba(79, 70, 229, 0.3); color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s;"
+                                onmouseover="this.style.background='rgba(79, 70, 229, 0.3)'; this.style.transform='scale(1.1)';"
+                                onmouseout="this.style.background='rgba(79, 70, 229, 0.2)'; this.style.transform='scale(1)';">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="carousel-btn" onclick="blogCarousel(1)"
+                                style="width: 40px; height: 40px; border-radius: 50%; background: rgba(79, 70, 229, 0.2); border: 1px solid rgba(79, 70, 229, 0.3); color: var(--accent); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s;"
+                                onmouseover="this.style.background='rgba(79, 70, 229, 0.3)'; this.style.transform='scale(1.1)';"
+                                onmouseout="this.style.background='rgba(79, 70, 229, 0.2)'; this.style.transform='scale(1)';">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
                         </div>
-                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
+
+                <div style="position: relative; overflow: hidden; padding: 0.5rem 0;">
+                    <div id="blogsCarousel"
+                        style="display: flex; gap: 1.5rem; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
+                        <?php foreach ($blogs as $b): ?>
+                            <div class="blog-slide">
+                                <h3 style="color: var(--accent); margin-top: 0; margin-bottom: 0.5rem; word-break: break-word; font-size: 1.25rem;">
+                                    <?php echo htmlspecialchars($b['title']); ?>
+                                </h3>
+                                <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+                                    <i class="fas fa-clock"></i> <?php echo date('M j, Y', strtotime($b['created_at'])); ?>
+                                </div>
+                                <p style="color: var(--text-muted); font-size: 0.95rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">
+                                    <?php echo nl2br(htmlspecialchars($b['content'])); ?>
+                                </p>
+                                <div style="margin-top: auto; padding-top: 1rem; text-align: right;">
+                                    <button class="btn" style="padding: 0.5rem 1.25rem; font-size: 0.85rem; background: rgba(59, 130, 246, 0.15); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                                        onmouseover="this.style.background='rgba(59, 130, 246, 0.25)'; this.style.transform='translateY(-2px)';"
+                                        onmouseout="this.style.background='rgba(59, 130, 246, 0.15)'; this.style.transform='translateY(0)';"
+                                        onclick="openBlogModal(<?php echo htmlspecialchars(json_encode($b)); ?>)">Read More</button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <?php if (count($blogs) > 1): ?>
+                    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;">
+                        <?php foreach (array_keys($blogs) as $i): ?>
+                            <div class="blog-carousel-dot" onclick="goToBlog(<?php echo $i; ?>)"
+                                style="width: 8px; height: 8px; border-radius: 50%; background: <?php echo $i === 0 ? 'var(--accent)' : 'rgba(79, 70, 229, 0.3)'; ?>; cursor: pointer; transition: all 0.3s; transform: scale(1);">
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </section>
         <?php endif; ?>
         <?php break; case 'contact': ?>
@@ -1875,6 +1949,31 @@ if (empty($section_order_str)) {
         </div>
     </div>
 
+    <!-- Blog Details Modal -->
+    <div id="blogModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 2000; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.3s ease;">
+        <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; padding: 2.5rem; backdrop-filter: blur(15px); max-width: 700px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);">
+            <button onclick="closeBlogModal()"
+                style="position: absolute; top: 1.5rem; right: 1.5rem; width: 36px; height: 36px; border-radius: 50%; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--accent); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
+                onmouseover="this.style.background='rgba(59, 130, 246, 0.3)'; this.style.transform='scale(1.1)';"
+                onmouseout="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.transform='scale(1)';">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <h2 id="blogModalTitle"
+                style="color: var(--accent); font-size: 1.8rem; margin-bottom: 0.5rem; margin-top: 0; padding-right: 2.5rem; line-height: 1.4; word-break: break-word;">
+            </h2>
+
+            <div id="blogModalDate"
+                style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 1rem;">
+                <i class="fas fa-clock"></i> <span></span>
+            </div>
+
+            <div id="blogModalContent"
+                style="color: rgba(241, 245, 249, 0.9); font-size: 1.05rem; line-height: 1.8; margin-bottom: 1rem; white-space: pre-wrap; word-break: break-word;"></div>
+        </div>
+    </div>
+
 
     <script>
 
@@ -1924,9 +2023,13 @@ if (empty($section_order_str)) {
         // Close modal when clicking outside
         document.addEventListener('click', function (event) {
             const achievModal = document.getElementById('achievementModal');
+            const blModal = document.getElementById('blogModal');
 
             if (event.target === achievModal) {
                 closeAchievementModal();
+            }
+            if (event.target === blModal) {
+                closeBlogModal();
             }
         });
 
@@ -1935,6 +2038,7 @@ if (empty($section_order_str)) {
             if (event.key === 'Escape') {
                 closeAchievementModal();
                 closeProjectModal();
+                closeBlogModal();
             }
         });
 
@@ -2012,6 +2116,112 @@ if (empty($section_order_str)) {
                 closeProjectModal();
             }
         });
+
+        // Blog Modal logic
+        function openBlogModal(blog) {
+            const modal = document.getElementById('blogModal');
+            const title = document.getElementById('blogModalTitle');
+            const dateSpan = document.querySelector('#blogModalDate span');
+            const content = document.getElementById('blogModalContent');
+
+            title.textContent = blog.title;
+            
+            // Format date beautifully if possible
+            if (blog.created_at) {
+                const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+                const formattedDate = new Date(blog.created_at).toLocaleDateString('en-US', dateOptions);
+                dateSpan.textContent = formattedDate;
+            } else {
+                dateSpan.textContent = '';
+            }
+
+            content.textContent = blog.content;
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBlogModal() {
+            const modal = document.getElementById('blogModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Blog Carousel logic
+        let currentBlogIndex = 0;
+        
+        function updateBlogCarouselPosition() {
+            const carousel = document.getElementById('blogsCarousel');
+            const blogSlides = document.querySelectorAll('.blog-slide');
+            if (!carousel || blogSlides.length === 0) return;
+            
+            const slideWidth = blogSlides[0].offsetWidth + 24; // 24px gap (1.5rem = 24px)
+            carousel.style.transform = `translateX(-${currentBlogIndex * slideWidth}px)`;
+
+            // Update dots
+            document.querySelectorAll('.blog-carousel-dot').forEach((dot, i) => {
+                if (i === currentBlogIndex) {
+                    dot.style.background = 'var(--accent)';
+                    dot.style.transform = 'scale(1.2)';
+                } else {
+                    dot.style.background = 'rgba(79, 70, 229, 0.3)';
+                    dot.style.transform = 'scale(1)';
+                }
+            });
+        }
+
+        function blogCarousel(direction) {
+            const blogSlides = document.querySelectorAll('.blog-slide');
+            const blogCount = blogSlides.length;
+            if (blogCount === 0) return;
+
+            currentBlogIndex += direction;
+
+            // Determine visible slides based on screen width
+            let visibleSlides = 1;
+            if (window.innerWidth >= 1200) {
+                visibleSlides = 3;
+            } else if (window.innerWidth >= 768) {
+                visibleSlides = 2;
+            }
+
+            const maxIndex = Math.max(0, blogCount - visibleSlides);
+
+            if (currentBlogIndex < 0) {
+                currentBlogIndex = maxIndex;
+            } else if (currentBlogIndex > maxIndex) {
+                currentBlogIndex = 0;
+            }
+
+            updateBlogCarouselPosition();
+        }
+
+        function goToBlog(index) {
+            const blogSlides = document.querySelectorAll('.blog-slide');
+            const blogCount = blogSlides.length;
+            if (blogCount === 0) return;
+
+            // Determine visible slides based on screen width
+            let visibleSlides = 1;
+            if (window.innerWidth >= 1200) {
+                visibleSlides = 3;
+            } else if (window.innerWidth >= 768) {
+                visibleSlides = 2;
+            }
+
+            const maxIndex = Math.max(0, blogCount - visibleSlides);
+            currentBlogIndex = Math.min(index, maxIndex);
+
+            updateBlogCarouselPosition();
+        }
+
+        // Initialize Carousel Position on load and resize
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(updateBlogCarouselPosition, 200); // Small delay to ensure styles are computed
+        });
+        window.addEventListener('resize', updateBlogCarouselPosition);
     </script>
 
     <script>

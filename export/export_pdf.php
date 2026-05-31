@@ -42,6 +42,15 @@ $work = $stmt_work->fetchAll();
 $stmt_ach = $pdo->query("SELECT * FROM achievements WHERE user_id = $user_id AND is_deleted = 0 ORDER BY date_earned DESC");
 $achievements = $stmt_ach->fetchAll();
 
+$stmt_proj = $pdo->query("SELECT * FROM projects WHERE user_id = $user_id AND is_deleted = 0 ORDER BY created_at DESC");
+$projects = $stmt_proj->fetchAll();
+
+$stmt_res = $pdo->query("SELECT * FROM research WHERE user_id = $user_id AND is_deleted = 0 ORDER BY publication_date DESC, created_at DESC");
+$researches = $stmt_res->fetchAll();
+
+$stmt_pub = $pdo->query("SELECT * FROM publications WHERE user_id = $user_id AND is_deleted = 0 ORDER BY publish_date DESC, created_at DESC");
+$publications = $stmt_pub->fetchAll();
+
 // Build HTML for PDF
 $html = "
 <html>
@@ -149,6 +158,44 @@ if (!empty($work)) {
     $html .= "</div>";
 }
 
+if (!empty($projects)) {
+    $html .= "
+    <div class='section'>
+        <div class='section-title'>Projects</div>";
+        
+    foreach ($projects as $p) {
+        $tags_str = "";
+        if (!empty($p['tags'])) {
+            $tags = array_filter(array_map('trim', explode(',', $p['tags'])));
+            if (!empty($tags)) {
+                $tags_str = "<br><span style='color: #555; font-size: 11px;'><strong>Tags:</strong> " . htmlspecialchars(implode(", ", $tags)) . "</span>";
+            }
+        }
+        
+        $links = [];
+        if (!empty($p['git_url'])) {
+            $links[] = "<a href='" . htmlspecialchars($p['git_url']) . "'>GitHub</a>";
+        }
+        if (!empty($p['live_demo_url'])) {
+            $links[] = "<a href='" . htmlspecialchars($p['live_demo_url']) . "'>Live Demo</a>";
+        }
+        if (!empty($p['video_url'])) {
+            $links[] = "<a href='" . htmlspecialchars($p['video_url']) . "'>Video</a>";
+        }
+        $links_str = !empty($links) ? "<br>" . implode(" &nbsp;|&nbsp; ", $links) : "";
+
+        $html .= "
+        <div class='item'>
+            <div class='item-header'>
+                <span class='item-title'>" . htmlspecialchars($p['title']) . "</span>
+            </div>
+            <div class='item-desc'>" . nl2br(htmlspecialchars($p['description'])) . $tags_str . $links_str . "</div>
+            <div class='clear'></div>
+        </div>";
+    }
+    $html .= "</div>";
+}
+
 if (!empty($education)) {
     $html .= "
     <div class='section'>
@@ -165,6 +212,71 @@ if (!empty($education)) {
                 <span class='item-date'>{$e['start_date']} - $end</span>
             </div>
             <div class='item-desc'>" . nl2br(htmlspecialchars($e['description'])) . $result_str . "</div>
+            <div class='clear'></div>
+        </div>";
+    }
+    $html .= "</div>";
+}
+
+if (!empty($researches)) {
+    $html .= "
+    <div class='section'>
+        <div class='section-title'>Research</div>";
+        
+    foreach ($researches as $r) {
+        $date_str = !empty($r['publication_date']) ? htmlspecialchars(date('M Y', strtotime($r['publication_date']))) : '';
+        
+        $tags_str = "";
+        if (!empty($r['tags'])) {
+            $tags = array_filter(array_map('trim', explode(',', $r['tags'])));
+            if (!empty($tags)) {
+                $tags_str = "<br><span style='color: #555; font-size: 11px;'><strong>Tags:</strong> " . htmlspecialchars(implode(", ", $tags)) . "</span>";
+            }
+        }
+        
+        $link_str = !empty($r['link']) ? "<br><a href='" . htmlspecialchars($r['link']) . "'>View Research Link &raquo;</a>" : "";
+
+        $html .= "
+        <div class='item'>
+            <div class='item-header'>
+                <span class='item-title'>" . htmlspecialchars($r['title']) . "</span>" . 
+                ($date_str ? "<span class='item-date'>$date_str</span>" : "") . "
+            </div>
+            <div class='item-desc'>" . nl2br(htmlspecialchars($r['description'])) . $tags_str . $link_str . "</div>
+            <div class='clear'></div>
+        </div>";
+    }
+    $html .= "</div>";
+}
+
+if (!empty($publications)) {
+    $html .= "
+    <div class='section'>
+        <div class='section-title'>Publications</div>";
+        
+    foreach ($publications as $pub) {
+        $date_str = !empty($pub['publish_date']) ? htmlspecialchars(date('M Y', strtotime($pub['publish_date']))) : '';
+        
+        $meta = [];
+        if (!empty($pub['authors'])) {
+            $meta[] = "<strong>Authors:</strong> " . htmlspecialchars($pub['authors']);
+        }
+        if (!empty($pub['journal_conference'])) {
+            $meta[] = "<strong>Venue:</strong> " . htmlspecialchars($pub['journal_conference']);
+        }
+        $meta_str = !empty($meta) ? "<br><span style='color: #555; font-size: 11px;'>" . implode(" &nbsp;|&nbsp; ", $meta) . "</span>" : "";
+        
+        $link_str = !empty($pub['link']) ? "<br><a href='" . htmlspecialchars($pub['link']) . "'>View Publication Link &raquo;</a>" : "";
+
+        $html .= "
+        <div class='item'>
+            <div class='item-header'>
+                <span class='item-title'>" . htmlspecialchars($pub['title']) . "</span>" . 
+                ($date_str ? "<span class='item-date'>$date_str</span>" : "") . "
+            </div>
+            <div class='item-desc'>" . 
+                (!empty($pub['abstract']) ? "<strong>Abstract:</strong> " . nl2br(htmlspecialchars($pub['abstract'])) : "") . 
+                $meta_str . $link_str . "</div>
             <div class='clear'></div>
         </div>";
     }
