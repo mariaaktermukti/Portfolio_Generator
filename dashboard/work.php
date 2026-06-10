@@ -22,6 +22,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("UPDATE work_experience SET is_deleted = 1 WHERE id = ? AND user_id = ?");
         $stmt->execute([$id, $user_id]);
         $_SESSION['success_msg'] = "Work experience deleted.";
+    } else if (isset($_POST['action']) && $_POST['action'] === 'edit') {
+        $id = $_POST['id'];
+        $job_title = $_POST['job_title'] ?? '';
+        $company = $_POST['company'] ?? '';
+        $start_date = $_POST['start_date'] ?? null;
+        $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
+        $description = $_POST['description'] ?? '';
+
+        if ($start_date && $end_date && $end_date < $start_date) {
+            $_SESSION['error_msg'] = "End date cannot be earlier than start date.";
+            header('Location: work.php');
+            exit;
+        }
+
+        $stmt = $pdo->prepare("UPDATE work_experience SET job_title = ?, company = ?, start_date = ?, end_date = ?, description = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$job_title, $company, $start_date, $end_date, $description, $id, $user_id]);
+        $_SESSION['success_msg'] = "Work experience updated.";
     } else {
         $job_title = $_POST['job_title'] ?? '';
         $company = $_POST['company'] ?? '';
@@ -66,8 +83,10 @@ $works = $stmt->fetchAll();
             <div class="msg-error" style="color: #ff4d4d; background: rgba(255, 77, 77, 0.1); padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid rgba(255, 77, 77, 0.3);"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
         
-        <form method="POST">
-            <h3>Add Work Experience</h3>
+        <form method="POST" id="workForm">
+            <input type="hidden" name="action" id="formAction" value="add">
+            <input type="hidden" name="id" id="workId" value="">
+            <h3 id="formTitle">Add Work Experience</h3>
             <div class="form-group">
                 <label>Job Title</label>
                 <input type="text" name="job_title" required placeholder="e.g. Senior Software Engineer">
@@ -95,7 +114,9 @@ $works = $stmt->fetchAll();
                 <textarea name="description" rows="3" placeholder="Describe your responsibilities..."></textarea>
             </div>
             
-            <button type="submit" class="btn">Add Work Experience</button>
+            <div style="display: flex; align-items: center;">
+                <button type="submit" class="btn" id="submitBtn">Add Work Experience</button>
+            </div>
         </form>
     </div>
 
@@ -111,11 +132,14 @@ $works = $stmt->fetchAll();
                             <i class="fas fa-calendar-alt"></i> <?php echo $work['start_date']; ?> to <?php echo $work['end_date'] ?: 'Present'; ?>
                         </div>
                         <p style="margin-bottom: 1rem;"><?php echo htmlspecialchars($work['description']); ?></p>
-                        <form method="POST">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<?php echo $work['id']; ?>">
-                            <button type="submit" class="btn btn-danger" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;"><i class="fas fa-trash"></i> Delete</button>
-                        </form>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn edit-work-btn" data-work='<?php echo htmlspecialchars(json_encode($work), ENT_QUOTES, 'UTF-8'); ?>' style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem; background-color: var(--accent); color: white;"><i class="fas fa-edit"></i> Edit</button>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="<?php echo $work['id']; ?>">
+                                <button type="submit" class="btn btn-danger" style="width: auto; padding: 0.4rem 1rem; font-size: 0.8rem;"><i class="fas fa-trash"></i> Delete</button>
+                            </form>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -197,6 +221,54 @@ $works = $stmt->fetchAll();
             if (startDateInput.value) {
                 endDatePicker.set("minDate", startDateInput.value);
             }
+
+            // Edit button handler
+            const editBtns = document.querySelectorAll('.edit-work-btn');
+            editBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const work = JSON.parse(this.getAttribute('data-work'));
+                    document.getElementById('formTitle').innerText = 'Edit Work Experience';
+                    document.getElementById('formAction').value = 'edit';
+                    document.getElementById('workId').value = work.id;
+                    
+                    document.querySelector('input[name="job_title"]').value = work.job_title;
+                    document.querySelector('input[name="company"]').value = work.company;
+                    document.querySelector('textarea[name="description"]').value = work.description || '';
+                    
+                    startDatePicker.setDate(work.start_date);
+                    if (work.end_date && work.end_date !== '0000-00-00') {
+                        endDatePicker.setDate(work.end_date);
+                    } else {
+                        endDatePicker.clear();
+                    }
+                    
+                    document.getElementById('submitBtn').innerText = 'Update Work Experience';
+                    
+                    if (!document.getElementById('cancelEditBtn')) {
+                        const cancelBtn = document.createElement('button');
+                        cancelBtn.type = 'button';
+                        cancelBtn.id = 'cancelEditBtn';
+                        cancelBtn.className = 'btn';
+                        cancelBtn.style.marginLeft = '1rem';
+                        cancelBtn.style.backgroundColor = 'var(--bg-tertiary)';
+                        cancelBtn.style.color = 'var(--text-main)';
+                        cancelBtn.innerText = 'Cancel';
+                        cancelBtn.onclick = function() {
+                            document.getElementById('workForm').reset();
+                            document.getElementById('formTitle').innerText = 'Add Work Experience';
+                            document.getElementById('formAction').value = 'add';
+                            document.getElementById('workId').value = '';
+                            document.getElementById('submitBtn').innerText = 'Add Work Experience';
+                            startDatePicker.clear();
+                            endDatePicker.clear();
+                            this.remove();
+                        };
+                        document.getElementById('submitBtn').parentNode.appendChild(cancelBtn);
+                    }
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
         });
     </script>
 </main>
