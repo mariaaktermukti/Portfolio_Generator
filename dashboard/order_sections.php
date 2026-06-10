@@ -128,15 +128,6 @@ $current_hidden = empty($current_hidden_str) ? [] : explode(',', $current_hidden
 
                             <!-- Right: Controls -->
                             <div style="display: flex; align-items: center; gap: 1.5rem;">
-                                <!-- Toggle/Eye -->
-                                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                    <label class="switch">
-                                        <input type="checkbox" class="visibility-toggle" <?php echo !in_array($section, $current_hidden) ? 'checked' : ''; ?> onchange="toggleEye(this)">
-                                        <span class="slider"></span>
-                                    </label>
-                                    <i class="fas <?php echo !in_array($section, $current_hidden) ? 'fa-eye' : 'fa-eye-slash'; ?> eye-icon" style="color: var(--text-muted); font-size: 1.1rem; width: 20px; transition: color 0.3s;" title="Toggle visibility"></i>
-                                </div>
-
                                 <!-- Up/Down Arrows -->
                                 <div style="display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.1);">
                                     <button type="button" onclick="moveItemUp(this)" style="background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.4rem 0.6rem; cursor: pointer; color: var(--text-muted); transition: background 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'"><i class="fas fa-arrow-up"></i></button>
@@ -159,54 +150,6 @@ $current_hidden = empty($current_hidden_str) ? [] : explode(',', $current_hidden
     .sortable-item:hover {
         background: rgba(255,255,255,0.06) !important;
         border-color: rgba(79, 70, 229, 0.4) !important;
-    }
-
-    /* Functional CSS Switch */
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-      margin: 0;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(255, 255, 255, 0.2);
-      transition: .4s;
-      border-radius: 24px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: #fff;
-      transition: .4s;
-      border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    input:checked + .slider {
-      background-color: var(--accent); /* purple/blue theme color */
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(20px);
     }
 </style>
 
@@ -244,17 +187,6 @@ $current_hidden = empty($current_hidden_str) ? [] : explode(',', $current_hidden
         }
     }
 
-    function toggleEye(checkbox) {
-        var eyeIcon = checkbox.closest('div').querySelector('.eye-icon');
-        if (checkbox.checked) {
-            eyeIcon.classList.remove('fa-eye-slash');
-            eyeIcon.classList.add('fa-eye');
-        } else {
-            eyeIcon.classList.remove('fa-eye');
-            eyeIcon.classList.add('fa-eye-slash');
-        }
-    }
-
     function saveOrder() {
         var items = el.querySelectorAll('.sortable-item');
         var order = [];
@@ -262,10 +194,6 @@ $current_hidden = empty($current_hidden_str) ? [] : explode(',', $current_hidden
         items.forEach(function(item) {
             var id = item.getAttribute('data-id');
             order.push(id);
-            var isVisible = item.querySelector('.visibility-toggle').checked;
-            if (!isVisible) {
-                hidden.push(id);
-            }
         });
         document.getElementById('section_order_input').value = order.join(',');
         document.getElementById('section_hidden_input').value = hidden.join(',');
