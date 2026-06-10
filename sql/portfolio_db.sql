@@ -1,5 +1,5 @@
--- CREATE DATABASE IF NOT EXISTS portfolio_db;
--- USE portfolio_db;
+CREATE DATABASE IF NOT EXISTS portfolio_db;
+USE portfolio_db;
 
 -- Table: users
 CREATE TABLE IF NOT EXISTS users (
