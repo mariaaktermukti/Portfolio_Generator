@@ -20,9 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($user_id && $action) {
         if ($action === 'approve') {
+            // UPDATE changes account status after admin approval.
             $stmt = $pdo->prepare("UPDATE users SET account_status = 'approved', is_deleted = 0 WHERE id = ?");
             $stmt->execute([$user_id]);
         } elseif ($action === 'reject') {
+            // UPDATE can also reject and soft-delete a user account.
             $stmt = $pdo->prepare("UPDATE users SET account_status = 'rejected', is_deleted = 1 WHERE id = ?");
             $stmt->execute([$user_id]);
         } elseif ($action === 'pause') {
@@ -35,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch all non-admin users
+//  SELECT lists normal users for the admin approval panel.
 $stmt = $pdo->query("SELECT id, username, email, account_status, created_at FROM users WHERE is_admin = 0 ORDER BY created_at DESC");
 $users_list = $stmt->fetchAll();
 ?>

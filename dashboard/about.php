@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $success = '';
 $edit_data = null;
-$edit_id = null;
+$edit_id = null; // Initialize edit_id to null to avoid undefined variable notice
 
 try {
     $pdo->exec("ALTER TABLE about ADD COLUMN about_image VARCHAR(255) DEFAULT ''");
@@ -18,18 +18,18 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action']) && $_POST['action'] === 'delete') {
+    if (isset($_POST['action']) && $_POST['action'] === 'delete') { // Soft delete the about entry
         $id = $_POST['id'];
-        $stmt = $pdo->prepare("UPDATE about SET is_deleted = 1 WHERE id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("UPDATE about SET is_deleted = 1 WHERE id = ? AND user_id = ?"); // Soft delete by setting is_deleted flag
         $stmt->execute([$id, $user_id]);
         $_SESSION['success_msg'] = "About entry deleted.";
-    } elseif (isset($_POST['action']) && $_POST['action'] === 'edit') {
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'edit') { // Update existing about entry
         $edit_id = $_POST['id'];
         $bio = $_POST['bio'] ?? '';
         $title = $_POST['title'] ?? '';
         $profile_image = $_POST['profile_image'] ?? '';
         $about_image = $_POST['about_image'] ?? '';
-        $stmt = $pdo->prepare("UPDATE about SET bio = ?, title = ?, profile_image = ?, about_image = ? WHERE id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("UPDATE about SET bio = ?, title = ?, profile_image = ?, about_image = ? WHERE id = ? AND user_id = ?"); // Update about entry with new data
         $stmt->execute([$bio, $title, $profile_image, $about_image, $edit_id, $user_id]);
         $_SESSION['success_msg'] = "About entry updated.";
     } else {
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = $_POST['title'] ?? '';
         $profile_image = $_POST['profile_image'] ?? '';
         $about_image = $_POST['about_image'] ?? '';
-        $stmt = $pdo->prepare("INSERT INTO about (user_id, bio, title, profile_image, about_image) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO about (user_id, bio, title, profile_image, about_image) VALUES (?, ?, ?, ?, ?)"); // Insert new about entry for the user
         $stmt->execute([$user_id, $bio, $title, $profile_image, $about_image]);
         $_SESSION['success_msg'] = "About entry added.";
     }
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if (isset($_GET['edit'])) {
     $edit_id = $_GET['edit'];
-    $stmt = $pdo->prepare("SELECT * FROM about WHERE id = ? AND user_id = ? AND is_deleted = 0");
+    $stmt = $pdo->prepare("SELECT * FROM about WHERE id = ? AND user_id = ? AND is_deleted = 0"); // Fetch the about entry to be edited, ensuring it belongs to the user and is not deleted
     $stmt->execute([$edit_id, $user_id]);
     $edit_data = $stmt->fetch();
 }
@@ -55,7 +55,7 @@ if (isset($_SESSION['success_msg'])) {
     $success = $_SESSION['success_msg'];
     unset($_SESSION['success_msg']);
 }
-$stmt = $pdo->prepare("SELECT * FROM about WHERE user_id = ? AND is_deleted = 0 ORDER BY id DESC");
+$stmt = $pdo->prepare("SELECT * FROM about WHERE user_id = ? AND is_deleted = 0 ORDER BY id DESC"); // Fetch all about entries for the user that are not deleted, ordered by most recent first
 $stmt->execute([$user_id]);
 $abouts = $stmt->fetchAll();
 ?>

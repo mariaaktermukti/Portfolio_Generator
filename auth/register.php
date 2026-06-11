@@ -13,12 +13,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username) || empty($email) || empty($password)) {
         $error = "All fields are required.";
     } else {
+        //  SELECT checks duplicate username/email before INSERT.
         $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
         $stmt->execute([$username, $email]);
         if ($stmt->fetch()) {
             $error = "Username or Email already exists.";
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            //INSERT creates a new account with pending approval status.
             $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, account_status) VALUES (?, ?, ?, 'pending')");
             if ($stmt->execute([$username, $email, $hashed_password])) {
                 $success = "Registration successful! Please wait for an admin to approve your account.";

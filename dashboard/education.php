@@ -15,7 +15,7 @@ $edit_id = null;
 
 // Add result column if it doesn't exist
 try {
-    $pdo->exec("ALTER TABLE education ADD COLUMN result VARCHAR(50) DEFAULT ''");
+    $pdo->exec("ALTER TABLE education ADD COLUMN result VARCHAR(50) DEFAULT ''"); // Add result column to store CGPA/GPA or other result info
 } catch (PDOException $e) {
     // Column already exists
 }
@@ -23,14 +23,14 @@ try {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'delete') {
         $id = $_POST['id'];
-        $stmt = $pdo->prepare("UPDATE education SET is_deleted = 1 WHERE id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("UPDATE education SET is_deleted = 1 WHERE id = ? AND user_id = ?"); // Soft delete by setting is_deleted flag
         $stmt->execute([$id, $user_id]);
         $_SESSION['success_msg'] = "Education entry deleted.";
     } elseif (isset($_POST['action']) && $_POST['action'] === 'edit') {
-        $edit_id = $_POST['id'];
-        $degree = $_POST['degree'] ?? '';
-        $institution = $_POST['institution'] ?? '';
-        $start_date = $_POST['start_date'] ?? null;
+        $edit_id = $_POST['id']; // Get the ID of the education entry being edited
+        $degree = $_POST['degree'] ?? ''; // Get the degree name from the form input
+        $institution = $_POST['institution'] ?? ''; // Get the institution name from the form input
+        $start_date = $_POST['start_date'] ?? null; //  Get the start date from the form input
         $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
         $description = $_POST['description'] ?? '';
         $result = $_POST['result'] ?? '';
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $stmt = $pdo->prepare("UPDATE education SET degree = ?, institution = ?, start_date = ?, end_date = ?, description = ?, result = ? WHERE id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("UPDATE education SET degree = ?, institution = ?, start_date = ?, end_date = ?, description = ?, result = ? WHERE id = ? AND user_id = ?"); // Update education entry with new data
         $stmt->execute([$degree, $institution, $start_date, $end_date, $description, $result, $edit_id, $user_id]);
         $_SESSION['success_msg'] = "Education entry updated.";
     } else {
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $stmt = $pdo->prepare("INSERT INTO education (user_id, degree, institution, start_date, end_date, description, result) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO education (user_id, degree, institution, start_date, end_date, description, result) VALUES (?, ?, ?, ?, ?, ?, ?)"); // Insert new education entry for the user
         $stmt->execute([$user_id, $degree, $institution, $start_date, $end_date, $description, $result]);
         $_SESSION['success_msg'] = "Education entry added.";
     }

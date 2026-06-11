@@ -8,6 +8,9 @@ if (!isset($_SESSION['user_id']) || !$_SESSION['is_admin']) {
 }
 
 // 1. Most popular skill
+// GROUP BY groups the same skill names, COUNT totals each group.
+
+
 $stmt_popular_skill = $pdo->query("
     SELECT skill_name, COUNT(*) as cnt
     FROM skills
@@ -19,6 +22,7 @@ $stmt_popular_skill = $pdo->query("
 $popular_skill = $stmt_popular_skill->fetch();
 
 // 2. Global Counts
+//  subqueries calculate multiple COUNT totals in one result row.
 $stmt_counts = $pdo->query("
     SELECT 
         (SELECT COUNT(*) FROM skills WHERE is_deleted = 0) as total_skills,
@@ -30,6 +34,7 @@ $stmt_counts = $pdo->query("
 $counts = $stmt_counts->fetch();
 
 // 3. User Ranking & Credibility Score using Subqueries
+//  each inner SELECT contributes one part of the final score.
 $stmt_ranking = $pdo->query("
     SELECT u.username, 
            ( 

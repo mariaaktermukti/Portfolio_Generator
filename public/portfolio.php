@@ -54,8 +54,10 @@ $review_submitted = isset($_GET['review_submitted']) && $_GET['review_submitted'
 if (!$username) {
     die("User not specified.");
 }
+// LEFT JOIN loads user, about, and contact data together.
+// Because about/contact are optional, the portfolio can still open if those rows are missing.
 
-// Fetch user, about, contact via JOIN
+
 $stmt = $pdo->prepare("
     SELECT u.id as user_id, u.username, u.email, 
            a.bio, a.title, a.profile_image, a.about_image, 
@@ -76,32 +78,43 @@ $user_id = $profile['user_id'];
 
 // Track view
 $ip_address = $_SERVER['REMOTE_ADDR'];
+// INSERT stores a portfolio visit for later COUNT statistics. agg
+
+
+
 $stmt_view = $pdo->prepare("INSERT INTO portfolio_views (user_id, ip_address) VALUES (?, ?)");
 $stmt_view->execute([$user_id, $ip_address]);
-
 // Fetch other data
+// This query retrieves all active education records of a specific user using join, sorted by the most recent start date first, and stores them in an array. 
+
+
 $stmt_edu = $pdo->prepare("SELECT e.* FROM education e JOIN users u ON e.user_id = u.id WHERE u.id = ? AND e.is_deleted = 0 ORDER BY e.start_date DESC");
 $stmt_edu->execute([$user_id]);
-$education = $stmt_edu->fetchAll();
+$education = $stmt_edu->fetchAll(); //** Fetch education ordered by start date descending
+
+
+// Each skill is stored as a separate row with a single value per column, satisfying the First Normal Form (1NF).
 
 $stmt_skills = $pdo->prepare("SELECT s.* FROM skills s JOIN users u ON s.user_id = u.id WHERE u.id = ? AND s.is_deleted = 0 ORDER BY s.proficiency DESC");
 $stmt_skills->execute([$user_id]);
-$skills = $stmt_skills->fetchAll();
+$skills = $stmt_skills->fetchAll(); //* Fetch skills ordered by proficiency
 
-$stmt_work = $pdo->prepare("SELECT w.* FROM work_experience w JOIN users u ON w.user_id = u.id WHERE u.id = ? AND w.is_deleted = 0 ORDER BY w.start_date DESC");
+//Work experiences are stored as separate rows, with one work experience per record, ensuring compliance with First Normal Form (1NF).
+
+$stmt_work = $pdo->prepare("SELECT w.* FROM work_experience w JOIN users u ON w.user_id = u.id WHERE u.id = ? AND w.is_deleted = 0 ORDER BY w.start_date DESC"); 
 $stmt_work->execute([$user_id]);
 $work = $stmt_work->fetchAll();
 
 $stmt_ach = $pdo->prepare("SELECT a.* FROM achievements a JOIN users u ON a.user_id = u.id WHERE u.id = ? AND a.is_deleted = 0 ORDER BY a.date_earned DESC");
-$stmt_ach->execute([$user_id]);
+$stmt_ach->execute([$user_id]); //*fetch achievements ordered by date earned descending (most recent first)
 $achievements = $stmt_ach->fetchAll();
 
 $stmt_proj = $pdo->prepare("SELECT p.* FROM projects p JOIN users u ON p.user_id = u.id WHERE u.id = ? AND p.is_deleted = 0 ORDER BY p.created_at DESC");
-$stmt_proj->execute([$user_id]);
+$stmt_proj->execute([$user_id]); //*fetch projects ordered by creation date descending (most recent first)
 $projects = $stmt_proj->fetchAll();
 
 $stmt_blogs = $pdo->prepare("SELECT b.* FROM blogs b JOIN users u ON b.user_id = u.id WHERE u.id = ? AND b.is_deleted = 0 ORDER BY b.created_at DESC");
-$stmt_blogs->execute([$user_id]);
+$stmt_blogs->execute([$user_id]); //*fetch blogs ordered by creation date descending (most recent first)
 $blogs = $stmt_blogs->fetchAll();
 
 // Fetch Research
@@ -114,7 +127,7 @@ $stmt_pub = $pdo->prepare("SELECT p.* FROM publications p JOIN users u ON p.user
 $stmt_pub->execute([$user_id]);
 $publications = $stmt_pub->fetchAll();
 
-// Add status column if it doesn't exist
+// Add status column if it doesn't exist . mainly updation
 try {
     $pdo->exec("ALTER TABLE reviews ADD COLUMN status VARCHAR(20) DEFAULT 'pending'");
 } catch (PDOException $e) {
@@ -122,10 +135,12 @@ try {
 }
 
 // Fetch only APPROVED Reviews
+// SQL  WHERE filters only approved reviews for public display.
 $stmt_reviews = $pdo->prepare("SELECT * FROM reviews WHERE user_id = ? AND status = 'approved' ORDER BY created_at DESC");
 $stmt_reviews->execute([$user_id]);
 $reviews = $stmt_reviews->fetchAll();
 
+// SQL  AVG aggregate calculates the portfolio's average rating.
 $stmt_avg_rating = $pdo->prepare("SELECT AVG(rating) as avg_rating FROM reviews WHERE user_id = ?");
 $stmt_avg_rating->execute([$user_id]);
 $avg_rating_row = $stmt_avg_rating->fetch();

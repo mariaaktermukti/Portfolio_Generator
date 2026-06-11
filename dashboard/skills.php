@@ -15,13 +15,13 @@ $edit_id = null;
 
 // Add skill_group and image_url columns if they don't exist
 try {
-    $pdo->exec("ALTER TABLE skills ADD COLUMN skill_group VARCHAR(100) DEFAULT 'Other'");
+    $pdo->exec("ALTER TABLE skills ADD COLUMN skill_group VARCHAR(100) DEFAULT 'Other'"); // Add skill_group column with default value 'Other'
 } catch (PDOException $e) {
     // Column already exists
 }
 
 try {
-    $pdo->exec("ALTER TABLE skills ADD COLUMN image_url VARCHAR(500) DEFAULT ''");
+    $pdo->exec("ALTER TABLE skills ADD COLUMN image_url VARCHAR(500) DEFAULT ''"); // Add image_url column to store the URL of the skill image
 } catch (PDOException $e) {
     // Column already exists
 }
@@ -54,15 +54,15 @@ function uploadToImgbb($filePath) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action']) && $_POST['action'] === 'delete') {
         $id = $_POST['id'];
-        $stmt = $pdo->prepare("UPDATE skills SET is_deleted = 1 WHERE id = ? AND user_id = ?");
+        $stmt = $pdo->prepare("UPDATE skills SET is_deleted = 1 WHERE id = ? AND user_id = ?"); // Soft delete by setting is_deleted flag
         $stmt->execute([$id, $user_id]);
         $_SESSION['success_msg'] = "Skill deleted.";
     } elseif (isset($_POST['action']) && $_POST['action'] === 'edit') {
-        $edit_id = $_POST['id'];
-        $skill_name = $_POST['skill_name'] ?? '';
-        $proficiency = (int)($_POST['proficiency'] ?? 0);
-        $skill_group = $_POST['skill_group'] ?? 'Other';
-        $image_url = $_POST['image_url'] ?? '';
+        $edit_id = $_POST['id']; // Get the ID of the skill being edited
+        $skill_name = $_POST['skill_name'] ?? ''; // Get the skill name from the form input
+        $proficiency = (int)($_POST['proficiency'] ?? 0); //  Get the proficiency percentage and cast it to an integer
+        $skill_group = $_POST['skill_group'] ?? 'Other'; // Get the skill group from the form input, default to 'Other' if not provided
+        $image_url = $_POST['image_url'] ?? ''; // Get the existing image URL from the hidden input field in the form, which is used if the user does not upload a new image
 
         // Handle new image upload
         if (isset($_FILES['skill_image']) && $_FILES['skill_image']['size'] > 0) {

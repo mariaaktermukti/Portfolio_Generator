@@ -22,6 +22,7 @@ $username = $_SESSION['username'];
             <div class="card">
                 <h3><i class="fas fa-eye" style="color: var(--accent);"></i> Portfolio Views</h3>
                 <?php
+                // COUNT aggregate shows total portfolio visits.
                 $stmt = $pdo->prepare("SELECT COUNT(*) FROM portfolio_views WHERE user_id = ?");
                 $stmt->execute([$user_id]);
                 $views = $stmt->fetchColumn();
@@ -31,6 +32,7 @@ $username = $_SESSION['username'];
             <div class="card">
                 <h3><i class="fas fa-star" style="color: #f59e0b;"></i> Average Rating</h3>
                 <?php
+                //  AVG aggregate calculates average review rating.
                 $stmt = $pdo->prepare("SELECT AVG(rating) FROM reviews WHERE user_id = ?");
                 $stmt->execute([$user_id]);
                 $rating = round($stmt->fetchColumn(), 1) ?: 'N/A';
@@ -40,6 +42,7 @@ $username = $_SESSION['username'];
             <div class="card">
                 <h3><i class="fas fa-comment" style="color: var(--success);"></i> Total Reviews</h3>
                 <?php
+                //COUNT aggregate counts all reviews for this user.
                 $stmt = $pdo->prepare("SELECT COUNT(*) FROM reviews WHERE user_id = ?");
                 $stmt->execute([$user_id]);
                 $reviews = $stmt->fetchColumn();
@@ -49,6 +52,7 @@ $username = $_SESSION['username'];
             <div class="card" style="border: 2px solid rgba(251, 146, 60, 0.3); background: rgba(251, 146, 60, 0.05);">
                 <h3><i class="fas fa-hourglass-half" style="color: #f97316;"></i> Pending Reviews</h3>
                 <?php
+                // SQL demonstration: WHERE filters only pending reviews.
                 $stmt = $pdo->prepare("SELECT COUNT(*) FROM reviews WHERE user_id = ? AND status = 'pending'");
                 $stmt->execute([$user_id]);
                 $pending = $stmt->fetchColumn();
