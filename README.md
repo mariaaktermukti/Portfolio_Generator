@@ -6,7 +6,6 @@ Welcome to your complete interactive project reference guide! Below is a compreh
 
 ## 📂 Visual Project Directory Tree
 
-Below is the directory map of the codebase in your workspace (`c:\Users\User\Desktop\dbms project\`). You can click on any file to view or edit it.
 
 ```text
 dbms project/
