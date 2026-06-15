@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS portfolio_db;
 USE portfolio_db;
 
--- NORMALIZATION NOTES FOR DBMS DEMONSTRATION:
+-- NORMALIZATION 
 -- 1NF: Repeating portfolio values are stored as separate rows in child tables
 --      such as skills, education, projects, blogs, reviews, and achievements.
 -- 2NF: Each table has a single primary key id; non-key columns describe that
@@ -207,44 +207,44 @@ CREATE TABLE IF NOT EXISTS logs (
     INDEX (user_id)
 );
 
-/* 
--- Trigger: after insert on skills
-DELIMITER //
-CREATE TRIGGER after_skill_insert
-AFTER INSERT ON skills
-FOR EACH ROW
-BEGIN
-    INSERT INTO logs (user_id, action) VALUES (NEW.user_id, CONCAT('Added new skill: ', NEW.skill_name));
-END;
-//
-DELIMITER ;
+ 
+-- -- Trigger: after insert on skills
+-- DELIMITER //
+-- CREATE TRIGGER after_skill_insert
+-- AFTER INSERT ON skills
+-- FOR EACH ROW
+-- BEGIN
+--     INSERT INTO logs (user_id, action) VALUES (NEW.user_id, CONCAT('Added new skill: ', NEW.skill_name));
+-- END;
+-- //
+-- DELIMITER ;
 
--- Trigger: after insert on blogs
-DELIMITER //
-CREATE TRIGGER after_blog_insert
-AFTER INSERT ON blogs
-FOR EACH ROW
-BEGIN
-    INSERT INTO logs (user_id, action) VALUES (NEW.user_id, CONCAT('Added new blog: ', NEW.title));
-END;
-//
-DELIMITER ;
-*/
+-- -- Trigger: after insert on blogs
+-- DELIMITER //
+-- CREATE TRIGGER after_blog_insert
+-- AFTER INSERT ON blogs
+-- FOR EACH ROW
+-- BEGIN
+--     INSERT INTO logs (user_id, action) VALUES (NEW.user_id, CONCAT('Added new blog: ', NEW.title));
+-- END;
+-- //
+-- DELIMITER ;
+-- */
 
-/*
--- View: v_portfolio_summary
-CREATE OR REPLACE VIEW v_portfolio_summary AS
-SELECT 
-    u.id AS user_id,
-    u.username,
-    u.email,
-    a.title AS professional_title,
-    a.profile_image,
-    c.phone,
-    (SELECT COUNT(*) FROM skills WHERE user_id = u.id AND is_deleted = 0) AS skill_count,
-    (SELECT COUNT(*) FROM work_experience WHERE user_id = u.id AND is_deleted = 0) AS work_count
-FROM users u
-LEFT JOIN about a ON u.id = a.user_id AND a.is_deleted = 0
-LEFT JOIN contact c ON u.id = c.user_id AND c.is_deleted = 0
-WHERE u.is_deleted = 0 AND u.account_status = 'approved';
-*/
+
+-- -- View: v_portfolio_summary
+-- CREATE OR REPLACE VIEW v_portfolio_summary AS
+-- SELECT 
+--     u.id AS user_id,
+--     u.username,
+--     u.email,
+--     a.title AS professional_title,
+--     a.profile_image,
+--     c.phone,
+--     (SELECT COUNT(*) FROM skills WHERE user_id = u.id AND is_deleted = 0) AS skill_count,
+--     (SELECT COUNT(*) FROM work_experience WHERE user_id = u.id AND is_deleted = 0) AS work_count
+-- FROM users u
+-- LEFT JOIN about a ON u.id = a.user_id AND a.is_deleted = 0
+-- LEFT JOIN contact c ON u.id = c.user_id AND c.is_deleted = 0
+-- WHERE u.is_deleted = 0 AND u.account_status = 'approved';
+-- */
