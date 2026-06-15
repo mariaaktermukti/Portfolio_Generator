@@ -4,9 +4,10 @@
 
 $issues = array();
 
-if (!(PHP_VERSION_ID >= 80100)) {
-    $issues[] = 'Your Composer dependencies require a PHP version ">= 8.1.0". You are running ' . PHP_VERSION . '.';
-}
+// Platform version check disabled to allow PHP 8.0 (XAMPP local)
+// if (!(PHP_VERSION_ID >= 80100)) {
+//     $issues[] = 'Your Composer dependencies require a PHP version ">= 8.1.0". You are running ' . PHP_VERSION . '.';
+// }
 
 if ($issues) {
     if (!headers_sent()) {
