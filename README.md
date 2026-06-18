@@ -2,9 +2,9 @@
 
 A **full-stack database-driven web application** that enables users to create, customize, and publish professional online portfolios without writing any code. Built with **PHP**, **MySQL**, **PDO**, modern **CSS**, and **JavaScript** on XAMPP.
 
-> **Problem:** Students, developers, researchers, freelancers, and job seekers need clean digital portfolios, but manually coding and updating static portfolio sites is time-consuming and technically demanding.
->
-> **Solution:** This system separates content from presentation via a normalized relational database. Users manage portfolio data through an intuitive dashboard, and a public-facing page dynamically renders that data into a beautiful glassmorphic portfolio.
+**Problem:** Students, developers, researchers, freelancers, and job seekers need clean digital portfolios, but manually coding and updating static portfolio sites is time-consuming and technically demanding.
+
+**Solution:** This system separates content from presentation via a normalized relational database. Users manage portfolio data through an intuitive dashboard, and a public-facing page dynamically renders that data into a beautiful glassmorphic portfolio.
 
 ---
 
@@ -224,10 +224,6 @@ portfolio_generator/
    - Open `http://localhost/Portfolio_generator` in your browser
    - You'll be redirected to the login page
 
-### Default Admin Account
-| Username | Password  | Email             |
-|----------|-----------|-------------------|
-| `admin`  | `admin123`| admin@example.com |
 
 ---
 
